@@ -20,7 +20,8 @@ const AboutFeature = ({ icon, title, description }: { icon: React.ReactNode, tit
 };
 
 const About = () => {
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Update the type to allow any HTML element instead of specifically HTMLDivElement
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
