@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -27,7 +27,7 @@ const SubscriptionCheckout = ({ planId = "monthly-pro" }: SubscriptionCheckoutPr
   const [error, setError] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   
-  useState(() => {
+  useEffect(() => {
     const loadPlans = async () => {
       try {
         const availablePlans = await getSubscriptionPlans();
@@ -46,7 +46,7 @@ const SubscriptionCheckout = ({ planId = "monthly-pro" }: SubscriptionCheckoutPr
     };
     
     loadPlans();
-  });
+  }, [planId]);
   
   const handlePlanSelect = (plan: PlanDetails) => {
     setSelectedPlan(plan);
