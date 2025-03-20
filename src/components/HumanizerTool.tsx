@@ -96,8 +96,8 @@ const HumanizerTool = () => {
     
     // Check for patterns common in AI text
     const patternScores = [
-      // Repetitive phrases
-      text.match(/(?:\b\w+\b)(?:\s+\w+\s+)(?:\1\b)/g)?.length || 0,
+      // Repetitive phrases - fixing the regex that had invalid backreference
+      text.match(/(\b\w+\b)(?:\s+\w+\s+)(\1\b)/g)?.length || 0,
       
       // Perfect grammar and punctuation
       (text.match(/[.!?]\s+[A-Z]/g)?.length || 0) / (text.match(/[.!?]/g)?.length || 1),
