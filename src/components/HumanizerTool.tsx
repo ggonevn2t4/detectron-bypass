@@ -95,7 +95,10 @@ const HumanizerTool = () => {
         let actualBreakPoint = humanized.indexOf(' ', breakPoint);
         if (actualBreakPoint === -1) actualBreakPoint = breakPoint;
         
-        humanized = humanized.slice(0, actualBreakPoint) + ". " + 
+        const firstPart = humanized.slice(0, actualBreakPoint);
+        const secondPart = humanized.slice(actualBreakPoint + 1);
+        
+        humanized = firstPart + ". " + 
                    secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
       }
       
