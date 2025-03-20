@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MenuIcon, X, LogOut, User, Layout } from 'lucide-react';
+import { MenuIcon, X, LogOut, User, Layout, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -41,6 +41,7 @@ const NavBar = () => {
 
   // Add detailed features link for logged-in users
   const authenticatedLinks = user ? [
+    { title: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
     { title: 'Detailed Features', path: '/features', icon: <Layout className="h-4 w-4 mr-2" /> },
   ] : [];
 
