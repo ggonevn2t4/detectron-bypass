@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ShieldCheck, RefreshCw, Zap, BarChart3 } from 'lucide-react';
 import { Container } from '@/components/ui/container';
+import { Link } from 'react-router-dom';
 
 const AboutFeature = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => {
   return (
@@ -42,9 +43,11 @@ const About = () => {
                 <p className="text-lg mb-8">
                   We believe that AI should enhance human creativity, not replace it. Our platform gives you the best of both worlds - the efficiency of AI with the nuance and originality of human writing.
                 </p>
-                <Button className="bg-primary hover:bg-primary/90">
-                  Learn More About Our Technology
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button className="bg-primary hover:bg-primary/90" asChild>
+                  <Link to="/features/humanizer">
+                    Learn More About Our Technology
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
               <div className="relative">
@@ -94,10 +97,19 @@ const About = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Join thousands of students, professionals, and content creators who trust HumanizeAI for their content needs.
             </p>
-            <Button size="lg" className="bg-primary hover:bg-primary/90">
-              Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="bg-primary hover:bg-primary/90" asChild>
+                <Link to="/#humanizer-tool">
+                  Start Humanizing
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/features">
+                  Learn More
+                </Link>
+              </Button>
+            </div>
           </Container>
         </section>
       </main>
