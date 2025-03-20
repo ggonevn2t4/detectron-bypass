@@ -10,7 +10,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Container } from '@/components/ui/container';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 
 const Index = () => {
   const location = useLocation();
@@ -45,7 +45,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               {[
                 {
                   title: "AI Humanizer",
@@ -66,10 +66,18 @@ const Index = () => {
                   title: "Quick Export",
                   description: "Export your content to multiple formats with ease",
                   path: "/features/export"
+                },
+                {
+                  title: "Testimonials",
+                  description: "See what our users are saying about our platform",
+                  path: "/testimonials",
+                  icon: <Star className="w-4 h-4 text-yellow-400" />
                 }
               ].map((feature, index) => (
                 <div key={index} className="bg-background rounded-xl border border-border/40 p-6 flex flex-col h-full">
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                  <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                    {feature.title} {feature.icon}
+                  </h3>
                   <p className="text-muted-foreground mb-6 flex-grow">{feature.description}</p>
                   <Button variant="outline" size="sm" className="w-full" asChild>
                     <Link to={feature.path}>

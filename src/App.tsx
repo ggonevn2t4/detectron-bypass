@@ -20,6 +20,7 @@ import AIWriterFeature from "./pages/features/AIWriterFeature";
 import AIDetectorFeature from "./pages/features/AIDetectorFeature";
 import ExportFeature from "./pages/features/ExportFeature";
 import FAQ from "./pages/FAQ";
+import Testimonials from "./pages/Testimonials";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ const AppRoutes = () => {
           <Route path="/about" element={<About />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/testimonials" element={<Testimonials />} />
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
