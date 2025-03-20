@@ -1,23 +1,11 @@
 
 import React from 'react';
-import { 
-  Slider, 
-  RadioGroup, 
-  RadioGroupItem,
-  Switch,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui';
+import { Slider } from '@/components/ui/slider';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { 
-  Sparkles, 
-  FileEdit, 
-  Zap, 
-  Repeat
-} from 'lucide-react';
+import { Sparkles, Repeat } from 'lucide-react';
 import { Form, FormControl, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 
 interface AdvancedSettingsProps {
