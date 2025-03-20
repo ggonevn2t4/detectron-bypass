@@ -7,6 +7,7 @@ import HowItWorksSection from './ai-detector/HowItWorksSection';
 import AdvancedFeaturesSection from './ai-detector/AdvancedFeaturesSection';
 import RiskAssessmentSection from './ai-detector/RiskAssessmentSection';
 import CTASection from './ai-detector/CTASection';
+import DetectorTool from '@/components/ai-detector/DetectorTool';
 
 const AIDetectorFeature = () => {
   return (
@@ -14,6 +15,7 @@ const AIDetectorFeature = () => {
       <NavBar />
       <main className="flex-grow pt-16">
         <HeroSection />
+        <DetectorTool />
         <HowItWorksSection />
         <AdvancedFeaturesSection />
         <RiskAssessmentSection />
