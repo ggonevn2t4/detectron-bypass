@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,8 +7,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { humanizeTextWithGemini, analyzeAIScore } from '@/services/gemini';
 
-// Sample AI text for demonstration purposes
 const sampleTexts = [
   `Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. AI research has been defined as the field of study of intelligent agents, which refers to any system that perceives its environment and takes actions that maximize its chance of achieving its goals.`,
   
@@ -29,6 +28,7 @@ const HumanizerTool = () => {
   const [copied, setCopied] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   const [currentTab, setCurrentTab] = useState('humanizer');
+  const [usingRealAI, setUsingRealAI] = useState(true);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -47,90 +47,30 @@ const HumanizerTool = () => {
     updateWordCount(sampleTexts[randomIndex]);
   };
 
-  const handleHumanize = () => {
-    if (!inputText.trim()) {
-      toast({
-        title: "Empty Text",
-        description: "Please enter some text to humanize",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsProcessing(true);
-    setProgressValue(0);
-    
-    // Simulate processing with progress updates
-    const totalSteps = 5;
-    let currentStep = 0;
-    
-    const progressInterval = setInterval(() => {
-      currentStep++;
-      setProgressValue(Math.floor((currentStep / totalSteps) * 100));
-      
-      if (currentStep >= totalSteps) {
-        clearInterval(progressInterval);
-        const humanized = humanizeText(inputText);
-        setOutputText(humanized);
-        
-        // Calculate scores
-        const initialAiScore = calculateInitialAiScore(inputText);
-        const finalHumanScore = 100 - calculateInitialAiScore(humanized);
-        
-        setAiDetectionScore(initialAiScore);
-        setHumanScore(finalHumanScore);
-        
-        setIsProcessing(false);
-        
-        toast({
-          title: "Humanization Complete",
-          description: `Your text is now ${finalHumanScore}% human-like`,
-        });
-      }
-    }, 500);
-  };
-
   const calculateInitialAiScore = (text: string) => {
-    // This is a simplified simulation of AI detection
-    // A real implementation would use NLP techniques
-    
-    // Check for patterns common in AI text
     const patternScores = [
-      // Repetitive phrases - fixing the regex that had invalid backreference
       text.match(/(\b\w+\b)(?:\s+\w+\s+)(\1\b)/g)?.length || 0,
-      
-      // Perfect grammar and punctuation
       (text.match(/[.!?]\s+[A-Z]/g)?.length || 0) / (text.match(/[.!?]/g)?.length || 1),
-      
-      // Long, complex sentences
       (text.match(/[^.!?]+[.!?]/g) || []).filter(s => s.length > 150).length,
-      
-      // Formal language patterns
       (text.match(/\b(therefore|however|consequently|furthermore|moreover)\b/gi)?.length || 0),
-      
-      // Lack of contractions
       (text.match(/\b(cannot|will not|do not|does not|is not)\b/gi)?.length || 0),
     ];
     
-    // Calculate a weighted score (0-100)
     const baseScore = Math.min(
       85,
       patternScores.reduce((sum, score) => sum + score, 0) * 5 + 
-      Math.random() * 15 // Add some randomness to seem more realistic
+      Math.random() * 15
     );
     
     return Math.min(Math.floor(baseScore), 99);
   };
 
   const humanizeText = (text: string) => {
-    // Break text into sentences
     const sentences = text.split(/(?<=[.!?])\s+/);
     
     const humanizedSentences = sentences.map(sentence => {
-      // Apply various humanization techniques
       let humanized = sentence;
       
-      // 1. Add contractions
       humanized = humanized
         .replace(/\b(cannot)\b/gi, "can't")
         .replace(/\b(will not)\b/gi, "won't")
@@ -142,32 +82,23 @@ const HumanizerTool = () => {
         .replace(/\b(could not)\b/gi, "couldn't")
         .replace(/\b(should not)\b/gi, "shouldn't");
       
-      // 2. Add variety to sentence structure
       const rand = Math.random();
       if (rand < 0.2 && humanized.length > 15) {
-        // Add a comma somewhere in the middle
         const midpoint = Math.floor(humanized.length / 2);
         const insertPoint = Math.floor(midpoint - 8 + Math.random() * 16);
         humanized = humanized.slice(0, insertPoint) + ", " + humanized.slice(insertPoint);
       } else if (rand < 0.35 && humanized.length > 40) {
-        // Break into two sentences occasionally
         const midpoint = Math.floor(humanized.length / 2);
         const breakRange = Math.floor(midpoint / 2);
         const breakPoint = midpoint - breakRange + Math.floor(Math.random() * (breakRange * 2));
         
-        // Find a good spot to break (after a word)
         let actualBreakPoint = humanized.indexOf(' ', breakPoint);
         if (actualBreakPoint === -1) actualBreakPoint = breakPoint;
         
-        // Capitalize the first letter after the break
-        const secondPart = humanized.slice(actualBreakPoint).trim();
-        if (secondPart) {
-          humanized = humanized.slice(0, actualBreakPoint) + ". " + 
-                     secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
-        }
+        humanized = humanized.slice(0, actualBreakPoint) + ". " + 
+                   secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
       }
       
-      // 3. Replace formal words with more conversational alternatives
       humanized = humanized
         .replace(/\b(utilize)\b/gi, "use")
         .replace(/\b(therefore)\b/gi, "so")
@@ -180,12 +111,10 @@ const HumanizerTool = () => {
         .replace(/\b(approximately)\b/gi, "about")
         .replace(/\b(sufficient)\b/gi, "enough");
       
-      // 4. Add filler words occasionally
       if (Math.random() < 0.3) {
         const fillers = ["actually", "basically", "honestly", "I mean", "you know", "kind of", "pretty much"];
         const filler = fillers[Math.floor(Math.random() * fillers.length)];
         
-        // Add at beginning or middle
         if (Math.random() < 0.5 && humanized.length > 10) {
           humanized = filler + ", " + humanized.charAt(0).toLowerCase() + humanized.slice(1);
         } else {
@@ -197,8 +126,76 @@ const HumanizerTool = () => {
       return humanized;
     });
     
-    // Join sentences, ensuring proper spacing
     return humanizedSentences.join(" ").replace(/\s{2,}/g, " ");
+  };
+
+  const handleHumanize = async () => {
+    if (!inputText.trim()) {
+      toast({
+        title: "Empty Text",
+        description: "Please enter some text to humanize",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+    setProgressValue(0);
+    
+    try {
+      const progressInterval = setInterval(() => {
+        setProgressValue(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return 95;
+          }
+          return prev + Math.floor(Math.random() * 10) + 1;
+        });
+      }, 300);
+
+      let initialAiScore: number;
+      if (usingRealAI) {
+        initialAiScore = await analyzeAIScore(inputText);
+      } else {
+        initialAiScore = calculateInitialAiScore(inputText);
+      }
+      setAiDetectionScore(initialAiScore);
+
+      let humanized: string;
+      if (usingRealAI) {
+        humanized = await humanizeTextWithGemini(inputText);
+      } else {
+        humanized = humanizeText(inputText);
+      }
+      
+      let finalHumanScore: number;
+      if (usingRealAI) {
+        const newAiScore = await analyzeAIScore(humanized);
+        finalHumanScore = 100 - newAiScore;
+      } else {
+        finalHumanScore = 100 - calculateInitialAiScore(humanized);
+      }
+      
+      setOutputText(humanized);
+      setHumanScore(finalHumanScore);
+      setProgressValue(100);
+      
+      clearInterval(progressInterval);
+      
+      toast({
+        title: "Humanization Complete",
+        description: `Your text is now ${finalHumanScore}% human-like`,
+      });
+    } catch (error) {
+      console.error("Error in humanization process:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCopy = () => {
@@ -230,7 +227,6 @@ const HumanizerTool = () => {
     });
   };
 
-  // Effect to reset scores when input changes
   useEffect(() => {
     if (inputText !== "") {
       setHumanScore(null);
@@ -249,7 +245,7 @@ const HumanizerTool = () => {
             className="w-full"
           >
             <div className="border-b border-border">
-              <div className="px-6">
+              <div className="px-6 flex justify-between items-center">
                 <TabsList className="bg-transparent h-16">
                   <TabsTrigger 
                     value="humanizer" 
@@ -273,6 +269,23 @@ const HumanizerTool = () => {
                     AI Writer
                   </TabsTrigger>
                 </TabsList>
+                
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={usingRealAI ? "default" : "outline"} 
+                    className="cursor-pointer" 
+                    onClick={() => setUsingRealAI(true)}
+                  >
+                    Gemini API
+                  </Badge>
+                  <Badge 
+                    variant={!usingRealAI ? "default" : "outline"} 
+                    className="cursor-pointer" 
+                    onClick={() => setUsingRealAI(false)}
+                  >
+                    Demo Mode
+                  </Badge>
+                </div>
               </div>
             </div>
             
@@ -350,7 +363,7 @@ const HumanizerTool = () => {
                               <h4 className="font-medium">Tips for best results:</h4>
                               <ul className="list-disc pl-4 space-y-1">
                                 <li>Use text with at least 50 words for better results</li>
-                                <li>The humanizer works best with formal, academic text</li>
+                                <li>{usingRealAI ? 'Gemini works best with English text' : 'The demo works best with formal, academic text'}</li>
                                 <li>Check the output for any factual changes</li>
                                 <li>For higher human scores, run the text through multiple times</li>
                               </ul>
@@ -421,7 +434,7 @@ const HumanizerTool = () => {
                       </Button>
                       <div className="text-xs text-muted-foreground flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        AI detection avoidance not guaranteed
+                        {usingRealAI ? 'Powered by Google Gemini API' : 'AI detection avoidance not guaranteed'}
                       </div>
                     </div>
                   </div>
