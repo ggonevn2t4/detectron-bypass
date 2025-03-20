@@ -90,6 +90,10 @@
     @apply border-border;
   }
 
+  html {
+    @apply text-base scroll-smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "salt" on, "ss01" on, "ss02" on, "cv01" on, "cv02" on, "cv03" on;
@@ -100,27 +104,27 @@
   }
 
   h1 {
-    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl;
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl;
   }
 
   h2 {
-    @apply text-3xl sm:text-4xl md:text-5xl;
+    @apply text-2xl sm:text-3xl md:text-4xl;
   }
 
   h3 {
-    @apply text-2xl sm:text-3xl;
-  }
-
-  h4 {
     @apply text-xl sm:text-2xl;
   }
 
+  h4 {
+    @apply text-lg sm:text-xl;
+  }
+
   p {
-    @apply text-base leading-7;
+    @apply text-sm sm:text-base leading-normal sm:leading-7;
   }
 
   small {
-    @apply text-sm leading-normal;
+    @apply text-xs sm:text-sm leading-normal;
   }
 
   .glass-card {
@@ -132,7 +136,12 @@
   }
 
   .section {
-    @apply py-20 md:py-28 px-6;
+    @apply py-10 sm:py-16 md:py-20 px-4 sm:px-6;
+  }
+
+  /* Text sizes for very small screens */
+  .text-2xs {
+    @apply text-[0.625rem] leading-[0.75rem];
   }
 
   /* Shimmer effect */
@@ -144,6 +153,14 @@
     @apply absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
     content: '';
   }
+}
+
+/* Make sure the layout wrapper allows for responsive design */
+#root {
+  @apply w-full mx-auto;
+  max-width: 100%;
+  padding: 0;
+  text-align: left;
 }
 
 /* Page transitions */
@@ -167,4 +184,15 @@
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+  
+  .card {
+    @apply px-4 py-3;
+  }
 }
