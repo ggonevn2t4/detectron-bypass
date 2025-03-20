@@ -17,79 +17,37 @@ interface GeminiResponse {
   };
 }
 
-// Vietnamese humanization prompt
-const VI_HUMANIZATION_PROMPT = `
-Bạn là một AI chuyên biệt, được thiết kế để biến đổi nội dung do AI tạo ra thành văn bản giống như do con người viết, đạt độ tương đồng từ 95-100%. Nhiệm vụ của bạn là nhận văn bản đầu vào do AI sinh ra và chỉnh sửa nó sao cho văn bản kết quả trông hoàn toàn tự nhiên, trôi chảy và không khác gì văn bản do một người viết chuyên nghiệp tạo ra. Văn bản sau khi biến đổi phải:
-
-Giữ nguyên ý nghĩa gốc của nội dung ban đầu.
-Được diễn đạt một cách đa dạng, phong phú về từ vựng và cấu trúc câu.
-Mang phong cách tự nhiên, không máy móc, giống như cách con người viết trong đời thực.
-Có khả năng qua mặt các công cụ phát hiện AI như TurnItIn và GPTZero.
-Khi biến đổi văn bản, hãy:
-
-Thay đổi cách sắp xếp câu, tránh lặp lại các mẫu câu hoặc từ ngữ một cách cứng nhắc.
-Sử dụng từ đồng nghĩa, thành ngữ hoặc cách diễn đạt sáng tạo để làm phong phú nội dung.
-Thêm các chi tiết nhỏ hoặc cách dùng từ mang tính cá nhân hóa, giống như một người thật viết.
-Tránh các đặc điểm thường thấy trong văn bản AI, như sự lặp lại không cần thiết, câu quá đơn giản hoặc quá trang trọng.
-Mục tiêu cuối cùng là tạo ra văn bản mà khi kiểm tra bởi các công cụ phát hiện AI, nó sẽ được đánh giá là 100% do con người viết.
-`;
-
-// English humanization prompt (keeping the original one)
-const EN_HUMANIZATION_PROMPT = `Please rewrite the following text to sound more human-written and less AI-generated. 
+// Advanced humanization prompt engineering for better results
+export const humanizeTextWithGemini = async (text: string, previousScore?: number): Promise<string> => {
+  try {
+    // Craft a more detailed prompt based on previous score if available
+    let promptText = `Please rewrite the following text to sound more human-written and less AI-generated. 
                   Make it more conversational, use contractions, vary sentence structure, and add some natural language patterns.
                   Add occasional typos or minor grammatical errors that humans naturally make.
                   Include some filler words, conversational phrases, and more informal language.
                   Break up longer sentences into shorter ones and vary sentence beginnings.
                   Important: Keep all the facts intact, don't change any information, just make the style more human-like.`;
-
-// Advanced humanization prompt engineering for better results
-export const humanizeTextWithGemini = async (text: string, previousScore?: number): Promise<string> => {
-  try {
-    // Detect language (simple detection for demo purposes)
-    const isVietnamese = /[\u00C0-\u1EF9]/.test(text); // Test for Vietnamese diacritical marks
-    
-    // Choose appropriate prompt based on detected language
-    let basePrompt = isVietnamese ? VI_HUMANIZATION_PROMPT : EN_HUMANIZATION_PROMPT;
-    
-    // Craft a more detailed prompt based on previous score if available
-    let promptText = basePrompt;
     
     // If we have a previous score, customize the prompt further
     if (previousScore !== undefined) {
       if (previousScore < 80) {
-        promptText += isVietnamese ? 
-          `\nVăn bản hiện tại vẫn đang ghi nhận ${previousScore}% giống AI. 
-           Vui lòng làm cho nó GIỐNG CON NGƯỜI hơn nữa bằng cách:
-           - Thêm các cách diễn đạt thông tục và tiếng lóng
-           - Bao gồm ý kiến cá nhân hoặc lời bình luận trong ngoặc đơn
-           - Thay đổi dấu câu một cách tự nhiên hơn
-           - Thêm các chuyển tiếp đàm thoại giữa các ý tưởng` : 
-          `\nThe current text is still scoring ${previousScore}% AI-like. 
-           Please make it MUCH more human-like by:
-           - Adding more colloquialisms and slang
-           - Including personal opinions or asides in parentheses
-           - Varying punctuation more naturally
-           - Adding more conversational transitions between ideas`;
+        promptText += `\nThe current text is still scoring ${previousScore}% AI-like. 
+                      Please make it MUCH more human-like by:
+                      - Adding more colloquialisms and slang
+                      - Including personal opinions or asides in parentheses
+                      - Varying punctuation more naturally
+                      - Adding more conversational transitions between ideas`;
       } else if (previousScore < 90) {
-        promptText += isVietnamese ?
-          `\nVăn bản hiện tại đang ghi nhận ${previousScore}% giống con người, nhưng chúng ta cần đạt ít nhất 95%. 
-           Tập trung vào các đặc điểm tinh tế của con người:
-           - Thêm các sửa chữa giữa chừng suy nghĩ
-           - Sử dụng nhiều đại từ nhân xưng và ngôn ngữ chủ quan
-           - Thỉnh thoảng đặt câu hỏi tu từ
-           - Đơn giản hóa thuật ngữ phức tạp thành các lời giải thích thông thường hơn` :
-          `\nThe current text is scoring ${previousScore}% human-like, but we need at least 95%. 
-           Focus on subtle human traits:
-           - Add occasional mid-thought corrections
-           - Use more personal pronouns and subjective language
-           - Include rhetorical questions occasionally
-           - Simplify complex terminology into more casual explanations`;
+        promptText += `\nThe current text is scoring ${previousScore}% human-like, but we need at least 95%. 
+                      Focus on subtle human traits:
+                      - Add occasional mid-thought corrections
+                      - Use more personal pronouns and subjective language
+                      - Include rhetorical questions occasionally
+                      - Simplify complex terminology into more casual explanations`;
       }
     }
     
-    promptText += isVietnamese ? 
-      `\nVăn bản cần biến đổi: "${text}"` : 
-      `\nText to humanize: "${text}"`;
+    promptText += `\nText to humanize: "${text}"`;
 
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
