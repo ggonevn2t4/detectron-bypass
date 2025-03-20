@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +8,7 @@ import {
   Sparkles, Eye, FileEdit, Zap, Settings, Book, Undo, FileCheck,
   MessageSquare, PenTool, Search, ScrollText
 } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -257,7 +258,8 @@ const HumanizerTool = () => {
       toast({
         title: "Text Too Short",
         description: "Please enter at least 50 words for accurate analysis",
-        variant: "warning",
+        // Change from "warning" to "default" variant
+        variant: "default",
       });
     }
     
