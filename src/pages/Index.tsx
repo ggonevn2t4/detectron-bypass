@@ -5,6 +5,7 @@ import Features from '@/components/Features';
 import Pricing from '@/components/Pricing';
 import HumanizerTool from '@/components/HumanizerTool';
 import Footer from '@/components/Footer';
+import TestimonialsSection from '@/components/TestimonialsSection';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,7 @@ const Index = () => {
         </section>
         
         <HumanizerTool />
+        <TestimonialsSection />
         <Pricing />
       </main>
       <Footer />

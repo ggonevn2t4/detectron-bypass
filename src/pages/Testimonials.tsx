@@ -13,7 +13,7 @@ const Testimonials = () => {
       name: "Sarah Johnson",
       role: "Content Manager",
       company: "MediaTech Solutions",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "HumanizeAI has completely transformed our content strategy. What used to take hours of manual rewriting now happens in seconds, and the quality is remarkable. None of our content has ever been flagged as AI-generated since we started using this tool."
     },
@@ -22,7 +22,7 @@ const Testimonials = () => {
       name: "Michael Chen",
       role: "Academic Researcher",
       company: "Stanford University",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "As a researcher, I use AI tools for initial drafts but was concerned about my papers being flagged by university detection systems. HumanizeAI has solved this problem completely. The text maintains all my key points while reading naturally."
     },
@@ -31,7 +31,7 @@ const Testimonials = () => {
       name: "Emma Davis",
       role: "Marketing Director",
       company: "Global Brands Inc.",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "We've tested HumanizeAI against every major AI detector on the market, and it passes with flying colors every time. This has given our team the confidence to scale our content production without sacrificing quality or authenticity."
     },
@@ -40,7 +40,7 @@ const Testimonials = () => {
       name: "David Rodriguez",
       role: "SEO Specialist",
       company: "Digital Growth Partners",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=150&h=150",
       rating: 4,
       content: "The content HumanizeAI produces not only bypasses detection but also performs exceptionally well in search rankings. We've seen a 35% increase in organic traffic since implementing this tool in our content workflow."
     },
@@ -49,7 +49,7 @@ const Testimonials = () => {
       name: "Jessica Wong",
       role: "Freelance Writer",
       company: "Self-employed",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "As a freelancer, HumanizeAI has doubled my productivity without compromising my reputation. My clients are thrilled with the quality, and I can take on more projects than ever before. The monthly subscription pays for itself many times over."
     },
@@ -58,7 +58,7 @@ const Testimonials = () => {
       name: "Thomas Müller",
       role: "Chief Content Officer",
       company: "European Media Group",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "We've implemented HumanizeAI across our entire content team of 50+ writers. The consistency in quality and the time savings have been remarkable. Our publication maintains its reputation for quality while significantly increasing output."
     },
@@ -67,7 +67,7 @@ const Testimonials = () => {
       name: "Olivia Martinez",
       role: "Student",
       company: "Berkeley University",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=150&h=150",
       rating: 4,
       content: "HumanizeAI has been a lifesaver for my research papers. It helps me refine AI-assisted drafts into polished academic writing that maintains my voice and passes all university checks. Highly recommended for fellow students."
     },
@@ -76,7 +76,7 @@ const Testimonials = () => {
       name: "Robert Kim",
       role: "E-commerce Owner",
       company: "StyleMart Online",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=150&h=150",
       rating: 5,
       content: "We use HumanizeAI for all our product descriptions and blog content. The quality is consistently excellent, and we've seen a 28% increase in conversion rates since implementing more human-like content across our site."
     }
