@@ -3,7 +3,7 @@ import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ShieldCheck, RefreshCw, Zap, BarChart3 } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Container } from '@/components/ui/container';
 
 const AboutFeature = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => {
   return (
@@ -20,45 +20,13 @@ const AboutFeature = ({ icon, title, description }: { icon: React.ReactNode, tit
 };
 
 const About = () => {
-  // Update the type to allow any HTML element instead of specifically HTMLDivElement
-  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fade-in');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    sectionRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => {
-      sectionRefs.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-    };
-  }, []);
-
   return (
     <div className="flex flex-col min-h-screen">
       <NavBar />
       <main className="flex-grow pt-24">
-        <section className="py-16 md:py-24 px-6">
-          <div 
-            ref={(el) => {
-              if (el) sectionRefs.current[0] = el;
-            }}
-            className="container max-w-6xl mx-auto opacity-0"
-          >
-            <div className="text-center mb-16">
+        <section className="py-12 md:py-16 px-6">
+          <Container className="max-w-6xl">
+            <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">About <span className="text-primary">HumanizeAI</span></h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 We're building the future of content creation by making AI-generated text indistinguishable from human writing.
@@ -80,28 +48,20 @@ const About = () => {
                 </Button>
               </div>
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 to-primary/20 rounded-2xl blur-lg opacity-50"></div>
-                <div className="relative aspect-video bg-gradient-to-br from-white to-white/90 dark:from-gray-900 dark:to-gray-800/90 rounded-2xl overflow-hidden shadow-premium">
-                  <div className="absolute inset-0 bg-black/5 backdrop-blur-sm"></div>
-                  <div className="flex items-center justify-center h-full p-8">
-                    <div className="relative w-20 h-20 bg-primary rounded-2xl overflow-hidden flex items-center justify-center shadow-glow">
-                      <div className="absolute w-full h-full bg-primary animate-pulse-light"></div>
+                <div className="relative bg-gradient-to-br from-white to-white/90 dark:from-gray-900 dark:to-gray-800/90 rounded-2xl overflow-hidden shadow-md border border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-center h-full p-8 aspect-video">
+                    <div className="relative w-20 h-20 bg-primary rounded-2xl overflow-hidden flex items-center justify-center">
                       <span className="relative text-white font-bold text-4xl">H</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Container>
         </section>
         
-        <section 
-          ref={(el) => {
-            if (el) sectionRefs.current[1] = el;
-          }}
-          className="py-16 bg-secondary/50 px-6 opacity-0"
-        >
-          <div className="container max-w-6xl mx-auto">
+        <section className="py-12 bg-secondary/50 px-6">
+          <Container className="max-w-6xl">
             <h2 className="text-3xl font-semibold mb-12 text-center">Why Choose HumanizeAI?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <AboutFeature 
@@ -125,16 +85,11 @@ const About = () => {
                 description="Our technology has been tested extensively with a 99.8% success rate in bypassing AI detection across all major platforms."
               />
             </div>
-          </div>
+          </Container>
         </section>
         
-        <section 
-          ref={(el) => {
-            if (el) sectionRefs.current[2] = el;
-          }}
-          className="py-16 md:py-24 px-6 opacity-0"
-        >
-          <div className="container max-w-6xl mx-auto text-center">
+        <section className="py-12 md:py-16 px-6">
+          <Container className="max-w-6xl text-center">
             <h2 className="text-3xl font-semibold mb-6">Ready to transform your content?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Join thousands of students, professionals, and content creators who trust HumanizeAI for their content needs.
@@ -143,7 +98,7 @@ const About = () => {
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </div>
+          </Container>
         </section>
       </main>
       <Footer />
