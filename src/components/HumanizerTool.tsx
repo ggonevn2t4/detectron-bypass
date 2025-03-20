@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   humanizeTextWithGemini, analyzeAIScore, detectAIContent, 
   generateAIContent, humanizeTextLocally, calculateInitialAiScore 
-} from '@/services/gemini';
+} from '@/services/ai';
 import { Container } from '@/components/ui/container';
 
 const sampleTexts = [
