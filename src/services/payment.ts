@@ -44,7 +44,7 @@ export const processCreditCardPayment = async (paymentData: PaymentFormData): Pr
           status: 'active',
           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
         }
-      ])
+      ] as any)
       .select();
     
     if (error) {
@@ -135,7 +135,7 @@ export const verifyMomoPayment = async (paymentId: string): Promise<{success: bo
         status: 'active',
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
       }
-    ])
+    ] as any)
     .select();
   
   if (error) {
