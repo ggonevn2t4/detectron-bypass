@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText, InfoIcon, Settings, Sparkles, RefreshCw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import AdvancedSettings from './AdvancedSettings';
 
 interface HumanizerInputProps {
   inputText: string;
@@ -14,6 +15,16 @@ interface HumanizerInputProps {
   onSampleText: () => void;
   onToggleSettings: () => void;
   onHumanize: () => void;
+  humanScoreTarget: number;
+  setHumanScoreTarget: (value: number) => void;
+  humanizationApproach: 'standard' | 'aggressive' | 'ultra';
+  setHumanizationApproach: (value: 'standard' | 'aggressive' | 'ultra') => void;
+  autoOptimize: boolean;
+  setAutoOptimize: (value: boolean) => void;
+  iterations: number;
+  setIterations: (value: number) => void;
+  writingStyle: string;
+  setWritingStyle: (value: string) => void;
 }
 
 const HumanizerInput: React.FC<HumanizerInputProps> = ({
@@ -24,7 +35,17 @@ const HumanizerInput: React.FC<HumanizerInputProps> = ({
   onInputChange,
   onSampleText,
   onToggleSettings,
-  onHumanize
+  onHumanize,
+  humanScoreTarget,
+  setHumanScoreTarget,
+  humanizationApproach,
+  setHumanizationApproach,
+  autoOptimize,
+  setAutoOptimize,
+  iterations,
+  setIterations,
+  writingStyle,
+  setWritingStyle
 }) => {
   return (
     <div>
@@ -72,15 +93,31 @@ const HumanizerInput: React.FC<HumanizerInputProps> = ({
         </Popover>
         
         <div className="flex items-center ml-auto">
-          <button
-            className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+          <Button
+            variant={showAdvancedSettings ? "secondary" : "ghost"}
+            size="sm"
+            className="text-xs flex items-center"
             onClick={onToggleSettings}
           >
             <Settings className="h-3 w-3 mr-1" />
-            Advanced Settings
-          </button>
+            {showAdvancedSettings ? "Hide Settings" : "Advanced Settings"}
+          </Button>
         </div>
       </div>
+      
+      <AdvancedSettings
+        showAdvancedSettings={showAdvancedSettings}
+        humanScoreTarget={humanScoreTarget}
+        setHumanScoreTarget={setHumanScoreTarget}
+        humanizationApproach={humanizationApproach}
+        setHumanizationApproach={setHumanizationApproach}
+        autoOptimize={autoOptimize}
+        setAutoOptimize={setAutoOptimize}
+        iterations={iterations}
+        setIterations={setIterations}
+        writingStyle={writingStyle}
+        setWritingStyle={setWritingStyle}
+      />
       
       <div className="mt-4">
         <Button

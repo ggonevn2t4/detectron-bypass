@@ -26,10 +26,13 @@ const HumanizerTool = () => {
   const [currentTab, setCurrentTab] = useState('humanizer');
   const [usingRealAI, setUsingRealAI] = useState(true);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  
+  // Advanced settings
   const [humanScoreTarget, setHumanScoreTarget] = useState(95);
   const [humanizationApproach, setHumanizationApproach] = useState<'standard' | 'aggressive' | 'ultra'>('standard');
   const [iterations, setIterations] = useState(1);
-  const [autoRun, setAutoRun] = useState(false);
+  const [autoOptimize, setAutoOptimize] = useState(false);
+  const [writingStyle, setWritingStyle] = useState('general');
   const [optimizationStage, setOptimizationStage] = useState(0);
   const [optimizationHistory, setOptimizationHistory] = useState<Array<{score: number, text: string}>>([]);
 
@@ -89,7 +92,16 @@ const HumanizerTool = () => {
       // First humanization pass
       let humanized: string;
       if (usingRealAI) {
-        humanized = await humanizeTextWithGemini(inputText);
+        // Pass the advanced settings to the humanization function
+        humanized = await humanizeTextWithGemini(
+          inputText, 
+          undefined, 
+          {
+            targetScore: humanScoreTarget,
+            approach: humanizationApproach,
+            style: writingStyle
+          }
+        );
       } else {
         humanized = humanizeTextLocally(inputText);
       }
@@ -113,14 +125,20 @@ const HumanizerTool = () => {
       }]);
       
       setHumanScore(finalHumanScore);
-      setProgressValue(100);
+      
+      // Auto optimize if enabled and score is below target
+      if (autoOptimize && finalHumanScore < humanScoreTarget && iterations > 1) {
+        await runOptimizationIterations(humanized, finalHumanScore, iterations - 1);
+      } else {
+        setProgressValue(100);
+        
+        toast({
+          title: "Humanization Complete",
+          description: `Your text is now ${finalHumanScore}% human-like`,
+        });
+      }
       
       clearInterval(progressInterval);
-      
-      toast({
-        title: "Humanization Complete",
-        description: `Your text is now ${finalHumanScore}% human-like`,
-      });
     } catch (error) {
       console.error("Error in humanization process:", error);
       toast({
@@ -130,6 +148,71 @@ const HumanizerTool = () => {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const runOptimizationIterations = async (text: string, currentScore: number, remainingIterations: number) => {
+    if (remainingIterations <= 0 || currentScore >= humanScoreTarget) {
+      setProgressValue(100);
+      toast({
+        title: "Optimization Complete",
+        description: `Your text is now ${currentScore}% human-like after ${optimizationStage + 1} iterations`,
+      });
+      return;
+    }
+    
+    try {
+      setOptimizationStage(prev => prev + 1);
+      
+      // Optimize text further
+      let optimized: string;
+      if (usingRealAI) {
+        optimized = await humanizeTextWithGemini(
+          text, 
+          currentScore, 
+          {
+            targetScore: humanScoreTarget,
+            approach: humanizationApproach,
+            style: writingStyle,
+            iterationCount: optimizationStage + 1
+          }
+        );
+      } else {
+        optimized = humanizeTextLocally(text);
+      }
+      
+      // Calculate new score
+      let newHumanScore: number;
+      if (usingRealAI) {
+        const newAiScore = await analyzeAIScore(optimized);
+        newHumanScore = 100 - newAiScore;
+      } else {
+        newHumanScore = 100 - calculateInitialAiScore(optimized);
+      }
+      
+      // Update display
+      setOutputText(optimized);
+      setHumanScore(newHumanScore);
+      
+      // Add to history
+      setOptimizationHistory(prev => [...prev, {
+        score: newHumanScore,
+        text: optimized
+      }]);
+      
+      // Continue optimization if needed
+      if (newHumanScore < humanScoreTarget && remainingIterations > 1) {
+        await runOptimizationIterations(optimized, newHumanScore, remainingIterations - 1);
+      } else {
+        setProgressValue(100);
+        toast({
+          title: "Optimization Complete",
+          description: `Your text is now ${newHumanScore}% human-like after ${optimizationStage + 1} iterations`,
+        });
+      }
+    } catch (error) {
+      console.error("Error in optimization iteration:", error);
+      throw error;
     }
   };
 
@@ -158,13 +241,24 @@ const HumanizerTool = () => {
         });
       }, 300);
       
+      setOptimizationStage(prev => prev + 1);
+      
       // Get current human score
       const currentScore = humanScore || 0;
       
-      // Try to optimize further
+      // Try to optimize further with advanced settings
       let optimized: string;
       if (usingRealAI) {
-        optimized = await humanizeTextWithGemini(outputText, currentScore);
+        optimized = await humanizeTextWithGemini(
+          outputText, 
+          currentScore, 
+          {
+            targetScore: humanScoreTarget,
+            approach: humanizationApproach,
+            style: writingStyle,
+            iterationCount: optimizationStage + 1
+          }
+        );
       } else {
         optimized = humanizeTextLocally(outputText);
       }
@@ -177,6 +271,12 @@ const HumanizerTool = () => {
       } else {
         newHumanScore = 100 - calculateInitialAiScore(optimized);
       }
+      
+      // Add to history
+      setOptimizationHistory(prev => [...prev, {
+        score: newHumanScore,
+        text: optimized
+      }]);
       
       // Update display
       setOutputText(optimized);
@@ -292,6 +392,16 @@ const HumanizerTool = () => {
                     onSampleText={handleSampleText}
                     onToggleSettings={() => setShowAdvancedSettings(!showAdvancedSettings)}
                     onHumanize={handleHumanize}
+                    humanScoreTarget={humanScoreTarget}
+                    setHumanScoreTarget={setHumanScoreTarget}
+                    humanizationApproach={humanizationApproach}
+                    setHumanizationApproach={setHumanizationApproach}
+                    autoOptimize={autoOptimize}
+                    setAutoOptimize={setAutoOptimize}
+                    iterations={iterations}
+                    setIterations={setIterations}
+                    writingStyle={writingStyle}
+                    setWritingStyle={setWritingStyle}
                   />
                   
                   {/* Right Column - Output */}
