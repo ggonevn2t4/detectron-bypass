@@ -1,212 +1,160 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MenuIcon, X, LogOut, User, Layout, LayoutDashboard } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
+import { Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const NavBar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Adjust breakpoint as needed
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Set initial value
+    handleResize();
+
+    // Listen for window resize events
+    window.addEventListener('resize', handleResize);
+
+    // Clean up the event listener on unmount
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    setIsOpen(false);
   }, [location]);
 
-  const navLinks = [
-    { title: 'Home', path: '/' },
-    { title: 'About', path: '/about' },
-    { title: 'Pricing', path: '/#pricing' },
-    { title: 'Features', path: '/#features' },
-  ];
-
-  // Add detailed features link for logged-in users
-  const authenticatedLinks = user ? [
-    { title: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
-    { title: 'Detailed Features', path: '/features', icon: <Layout className="h-4 w-4 mr-2" /> },
-  ] : [];
-
-  const isActive = (path: string) => {
-    if (path.includes('#')) {
-      return location.hash === path.split('#')[1] || (path === '/' && location.pathname === '/');
-    }
-    return location.pathname === path;
-  };
-
-  // Get user initials for avatar fallback
-  const getUserInitials = () => {
-    if (!user) return '?';
-    const email = user.email || '';
-    return email.substring(0, 2).toUpperCase();
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <header className={cn(
-      'fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 lg:px-12',
-      isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm' : 'bg-transparent'
-    )}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <nav className="bg-background border-b">
+      <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        
         <Link to="/" className="flex items-center space-x-2">
           <span className="relative w-8 h-8 bg-primary rounded-lg overflow-hidden flex items-center justify-center">
-            <div className="absolute w-full h-full bg-primary animate-pulse-light"></div>
+            <div className="absolute w-full h-full bg-primary"></div>
             <span className="relative text-white font-bold text-lg">H</span>
           </span>
           <span className="font-medium text-xl">Humanize<span className="text-primary">AI</span></span>
         </Link>
+        
+        <div className="hidden md:flex items-center space-x-1">
+          <Link to="/" className="nav-link">
+            {t('nav.home')}
+          </Link>
+          <Link to="/#features" className="nav-link">
+            {t('nav.features')}
+          </Link>
+          <Link to="/#pricing" className="nav-link">
+            {t('nav.pricing')}
+          </Link>
+          <Link to="/about" className="nav-link">
+            {t('nav.about')}
+          </Link>
+        </div>
 
-        <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
-                isActive(link.path) ? 'text-primary' : 'text-foreground/80'
-              )}
-            >
-              {link.title}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden md:flex items-center space-x-4">
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src={user.user_metadata.avatar_url} />
-                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Link to="/profile">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
+        <div className="flex items-center space-x-2">
+          <LanguageSwitcher />
+          {isAuthenticated ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/dashboard">
+                  {t('nav.dashboard')}
                 </Link>
-                {authenticatedLinks.map((link) => (
-                  <Link key={link.path} to={link.path}>
-                    <DropdownMenuItem className="cursor-pointer">
-                      {link.icon}
-                      {link.title}
-                    </DropdownMenuItem>
-                  </Link>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Avatar>
+                      <AvatarImage src={user?.image} />
+                      <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      logout();
+                    }}
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <>
-              <Link to="/auth">
-                <Button variant="outline" className="text-sm font-medium">
-                  Log In
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button className="text-sm font-medium bg-primary hover:bg-primary/90">
-                  Sign Up
-                </Button>
-              </Link>
+              <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link to="/auth">
+                  {t('nav.login')}
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/auth?tab=signup">
+                  {t('nav.signUp')}
+                </Link>
+              </Button>
             </>
           )}
         </div>
-
-        <button 
-          className="md:hidden p-2"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle mobile menu"
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
-        </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in">
-          <div className="flex flex-col p-6 space-y-6">
-            <nav className="flex flex-col space-y-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={cn(
-                    'text-lg font-medium transition-colors',
-                    isActive(link.path) ? 'text-primary' : 'text-foreground/80'
-                  )}
-                >
-                  {link.title}
-                </Link>
-              ))}
-              {user && authenticatedLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-lg font-medium transition-colors text-foreground/80 hover:text-primary flex items-center"
-                >
-                  {link.icon}
-                  <span>{link.title}</span>
-                </Link>
-              ))}
-            </nav>
-            <div className="flex flex-col space-y-4 pt-4 border-t">
-              {user ? (
-                <>
-                  <Link to="/profile">
-                    <Button variant="outline" className="w-full justify-start">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Button>
-                  </Link>
-                  <Button onClick={() => signOut()} variant="outline" className="w-full justify-start">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/auth">
-                    <Button variant="outline" className="w-full">
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link to="/auth">
-                    <Button className="w-full bg-primary hover:bg-primary/90">
-                      Sign Up
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
+      {/* Mobile menu, show/hide based on menu state */}
+      {isOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link to="/" className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+              {t('nav.home')}
+            </Link>
+            <Link to="/#features" className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+              {t('nav.features')}
+            </Link>
+            <Link to="/#pricing" className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+              {t('nav.pricing')}
+            </Link>
+            <Link to="/about" className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+              {t('nav.about')}
+            </Link>
+            {isAuthenticated && (
+              <Link to="/dashboard" className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+                {t('nav.dashboard')}
+              </Link>
+            )}
           </div>
         </div>
       )}
-    </header>
+
+    </nav>
   );
 };
 
