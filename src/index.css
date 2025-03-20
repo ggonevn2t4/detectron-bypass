@@ -92,11 +92,21 @@
 
   html {
     @apply text-base scroll-smooth;
+    font-size: 16px;
+  }
+
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "salt" on, "ss01" on, "ss02" on, "cv01" on, "cv02" on, "cv03" on;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -127,6 +137,7 @@
     @apply text-xs sm:text-sm leading-normal;
   }
 
+  /* Các lớp tiện ích */
   .glass-card {
     @apply border border-white/20 bg-white/10 backdrop-blur-xl;
   }
@@ -136,7 +147,7 @@
   }
 
   .section {
-    @apply py-10 sm:py-16 md:py-20 px-4 sm:px-6;
+    @apply py-8 sm:py-12 md:py-16 lg:py-20 px-4 sm:px-6;
   }
 
   /* Text sizes for very small screens */
@@ -152,6 +163,16 @@
   .shimmer::before {
     @apply absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
     content: '';
+  }
+
+  /* Touch-friendly padding for mobile */
+  .touch-target {
+    @apply p-2 sm:p-0;
+  }
+  
+  /* Fix for mobile tapping */
+  .button, button, a {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -194,5 +215,23 @@
   
   .card {
     @apply px-4 py-3;
+  }
+  
+  /* Fix for mobile inputs */
+  input, textarea, select, button {
+    @apply text-base; /* Tránh zoom tự động trên iOS */
+    font-size: 16px !important;
+  }
+  
+  /* Tăng kích thước touch target */
+  button, .button, a {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/* Fix for mobile height calculations */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
   }
 }

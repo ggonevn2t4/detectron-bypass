@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
@@ -19,10 +20,22 @@ import AIWriterFeature from "./pages/features/AIWriterFeature";
 import AIDetectorFeature from "./pages/features/AIDetectorFeature";
 import ExportFeature from "./pages/features/ExportFeature";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const AppRoutes = () => {
   const location = useLocation();
+  
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   
   return (
     <TransitionGroup component={null}>
@@ -63,7 +76,7 @@ const App = () => (
       <TooltipProvider>
         <div className="min-h-screen flex flex-col">
           <Toaster />
-          <Sonner />
+          <Sonner position="top-right" closeButton richColors />
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
