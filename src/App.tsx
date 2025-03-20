@@ -14,6 +14,10 @@ import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import FeaturesPage from "./pages/Features";
 import Dashboard from "./pages/Dashboard";
+import HumanizerFeature from "./pages/features/HumanizerFeature";
+import AIWriterFeature from "./pages/features/AIWriterFeature";
+import AIDetectorFeature from "./pages/features/AIDetectorFeature";
+import ExportFeature from "./pages/features/ExportFeature";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +46,10 @@ const AppRoutes = () => {
               <Dashboard />
             </ProtectedRoute>
           } />
+          <Route path="/features/humanizer" element={<HumanizerFeature />} />
+          <Route path="/features/ai-writer" element={<AIWriterFeature />} />
+          <Route path="/features/ai-detector" element={<AIDetectorFeature />} />
+          <Route path="/features/export" element={<ExportFeature />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </CSSTransition>
