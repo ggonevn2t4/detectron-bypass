@@ -3,17 +3,31 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 type PlanProps = {
   name: string;
   price: string;
+  originalPrice?: string;
   description: string;
   features: string[];
+  buttonText: string;
   popular?: boolean;
   delay: number;
+  billingText: string;
 };
 
-const PricingCard = ({ name, price, description, features, popular = false, delay }: PlanProps) => {
+const PricingCard = ({ 
+  name, 
+  price, 
+  originalPrice, 
+  description, 
+  features, 
+  buttonText, 
+  popular = false, 
+  delay, 
+  billingText 
+}: PlanProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,12 +75,18 @@ const PricingCard = ({ name, price, description, features, popular = false, dela
       </div>
       <div className="mb-6">
         <div className="flex items-end">
+          {originalPrice && (
+            <span className="text-2xl text-muted-foreground line-through mr-2">{originalPrice}</span>
+          )}
           <span className="text-4xl font-bold">{price}</span>
-          {price !== 'Free' && <span className="text-muted-foreground ml-2 mb-1">/month</span>}
+          <span className="text-muted-foreground ml-2 mb-1">/ month</span>
+        </div>
+        <div className="text-sm text-muted-foreground mt-1">
+          {billingText}
         </div>
       </div>
       <div className="flex-grow">
-        <ul className="space-y-3 mb-8">
+        <ul className="space-y-4 mb-8">
           {features.map((feature, i) => (
             <li key={i} className="flex">
               <CheckCircle className="h-5 w-5 text-primary shrink-0 mr-3" />
@@ -83,7 +103,7 @@ const PricingCard = ({ name, price, description, features, popular = false, dela
             : "bg-secondary hover:bg-secondary/90 text-foreground"
         )}
       >
-        {popular ? "Get Started" : "Choose Plan"}
+        {buttonText}
       </Button>
     </div>
   );
@@ -94,6 +114,7 @@ const Pricing = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -106,6 +127,10 @@ const Pricing = () => {
               setTimeout(() => {
                 entry.target.classList.add('translate-y-0', 'opacity-100');
               }, 200);
+            } else if (entry.target === bannerRef.current) {
+              setTimeout(() => {
+                entry.target.classList.add('translate-y-0', 'opacity-100');
+              }, 100);
             }
             observer.unobserve(entry.target);
           }
@@ -120,6 +145,9 @@ const Pricing = () => {
     if (subtitleRef.current) {
       observer.observe(subtitleRef.current);
     }
+    if (bannerRef.current) {
+      observer.observe(bannerRef.current);
+    }
 
     return () => {
       if (titleRef.current) {
@@ -128,54 +156,72 @@ const Pricing = () => {
       if (subtitleRef.current) {
         observer.unobserve(subtitleRef.current);
       }
+      if (bannerRef.current) {
+        observer.unobserve(bannerRef.current);
+      }
     };
   }, []);
 
-  const plans = [
-    {
-      name: "Free",
-      price: "Free",
-      description: "Basic humanization for occasional use",
-      features: [
-        "500 words per month",
-        "Basic AI detection",
-        "Standard support",
-        "1 export format"
-      ],
-      delay: 300
-    },
-    {
-      name: "Pro",
-      price: "$29",
-      description: "Perfect for students and content creators",
-      features: [
-        "25,000 words per month",
-        "Advanced humanization",
-        "Priority support",
-        "All export formats",
-        "AI detector tool"
-      ],
-      popular: true,
-      delay: 500
-    },
-    {
-      name: "Business",
-      price: "$79",
-      description: "For professionals and small teams",
-      features: [
-        "100,000 words per month",
-        "Premium humanization",
-        "24/7 support",
-        "All export formats",
-        "API access",
-        "Team collaboration"
-      ],
-      delay: 700
-    }
-  ];
+  // Calculate pro price with 20% discount compared to the reference image
+  const monthlyPrice = {
+    original: '$16.24',
+    discounted: '$9.99'  // 20% less than $12.99
+  };
+  
+  const yearlyPrice = {
+    original: '$155.88',
+    discounted: '$119.88'  // roughly 20% less
+  };
+
+  const freePlan = {
+    name: "Free",
+    price: "$0",
+    description: "Basic humanization for occasional use",
+    buttonText: "Start Free Trial",
+    features: [
+      "550 AI Humanization words",
+      "3 Content Generation Credits",
+      "Limited usage of AI tools",
+      "Upgrade early any time during trial",
+      "Basic AI Detection Bypass"
+    ],
+    delay: 300,
+    billingText: `billed as ${yearlyPrice.original} / year after trial`
+  };
+
+  const proPlan = {
+    name: "Pro",
+    price: billingCycle === 'monthly' ? monthlyPrice.discounted : '$8.49',
+    originalPrice: billingCycle === 'monthly' ? monthlyPrice.original : undefined,
+    description: "Perfect for students and content creators",
+    buttonText: "Upgrade Plan",
+    popular: true,
+    features: [
+      "Unlimited AI Humanizations",
+      "15 AI Writer Generations / month",
+      "2,500 words per process",
+      "Advanced AI Detection Bypass",
+      "Watermark and future proof",
+      "Beta access to new AI tools"
+    ],
+    delay: 500,
+    billingText: billingCycle === 'monthly' 
+      ? `billed as ${yearlyPrice.discounted} annually` 
+      : 'billed annually'
+  };
 
   return (
     <section id="pricing" ref={sectionRef} className="relative pt-16 pb-32 section">
+      {/* Promotional Banner */}
+      <div 
+        ref={bannerRef} 
+        className="w-full bg-primary text-white py-3 px-4 text-center mb-12 transition-all duration-700 transform translate-y-8 opacity-0"
+      >
+        <span className="font-medium">
+          Back to School Special! - 🍎 📚 Save up to 45%! Don't miss out – offer ends April 2.
+        </span>
+      </div>
+
       {/* Background elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-3xl opacity-70"></div>
@@ -223,20 +269,9 @@ const Pricing = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {plans.map((plan, index) => (
-            <PricingCard
-              key={index}
-              {...plan}
-              price={
-                plan.price === "Free"
-                  ? "Free"
-                  : billingCycle === 'annual'
-                    ? `$${Math.round(parseInt(plan.price.replace('$', '')) * 0.8)}`
-                    : plan.price
-              }
-            />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+          <PricingCard {...freePlan} />
+          <PricingCard {...proPlan} />
         </div>
 
         <div className="mt-16 text-center">
