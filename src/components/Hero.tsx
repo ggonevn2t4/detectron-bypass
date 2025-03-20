@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -69,12 +70,16 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in opacity-0" style={{ animationDelay: '1.1s', animationFillMode: 'forwards' }}>
-            <Button size="lg" className="text-base font-medium px-8 py-6 bg-primary hover:bg-primary/90 hover:shadow-glow transition-all duration-300">
-              Start Humanizing
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button size="lg" className="text-base font-medium px-8 py-6 bg-primary hover:bg-primary/90 hover:shadow-glow transition-all duration-300" asChild>
+              <a href="#humanizer-tool">
+                Start Humanizing
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </a>
             </Button>
-            <Button size="lg" variant="outline" className="text-base px-8 py-6 border-primary/20 text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all duration-300">
-              Learn More
+            <Button size="lg" variant="outline" className="text-base px-8 py-6 border-primary/20 text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" asChild>
+              <Link to="/features">
+                Learn More
+              </Link>
             </Button>
           </div>
           
