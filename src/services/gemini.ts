@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 
 // API key is typically stored in environment variables, but for quick demo we're using it directly
@@ -18,8 +17,38 @@ interface GeminiResponse {
   };
 }
 
-export const humanizeTextWithGemini = async (text: string): Promise<string> => {
+// Advanced humanization prompt engineering for better results
+export const humanizeTextWithGemini = async (text: string, previousScore?: number): Promise<string> => {
   try {
+    // Craft a more detailed prompt based on previous score if available
+    let promptText = `Please rewrite the following text to sound more human-written and less AI-generated. 
+                  Make it more conversational, use contractions, vary sentence structure, and add some natural language patterns.
+                  Add occasional typos or minor grammatical errors that humans naturally make.
+                  Include some filler words, conversational phrases, and more informal language.
+                  Break up longer sentences into shorter ones and vary sentence beginnings.
+                  Important: Keep all the facts intact, don't change any information, just make the style more human-like.`;
+    
+    // If we have a previous score, customize the prompt further
+    if (previousScore !== undefined) {
+      if (previousScore < 80) {
+        promptText += `\nThe current text is still scoring ${previousScore}% AI-like. 
+                      Please make it MUCH more human-like by:
+                      - Adding more colloquialisms and slang
+                      - Including personal opinions or asides in parentheses
+                      - Varying punctuation more naturally
+                      - Adding more conversational transitions between ideas`;
+      } else if (previousScore < 90) {
+        promptText += `\nThe current text is scoring ${previousScore}% human-like, but we need at least 95%. 
+                      Focus on subtle human traits:
+                      - Add occasional mid-thought corrections
+                      - Use more personal pronouns and subjective language
+                      - Include rhetorical questions occasionally
+                      - Simplify complex terminology into more casual explanations`;
+      }
+    }
+    
+    promptText += `\nText to humanize: "${text}"`;
+
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
       {
@@ -32,18 +61,14 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
             {
               parts: [
                 {
-                  text: `Please rewrite the following text to sound more human-written and less AI-generated. 
-                  Make it more conversational, use contractions, vary sentence structure, and add some natural language patterns.
-                  Important: Keep all the facts intact, don't change any information, just make the style more human-like.
-                  
-                  Text to humanize: "${text}"`,
+                  text: promptText,
                 },
               ],
             },
           ],
           generationConfig: {
-            temperature: 0.7,
-            topP: 0.8,
+            temperature: 0.9, // Increased for more randomness and human-like output
+            topP: 0.9,
             topK: 40,
             maxOutputTokens: 2048,
           },
@@ -99,6 +124,187 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
   }
 };
 
+// Local humanization function as backup for API failures
+export const humanizeTextLocally = (text: string): string => {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  
+  const humanizedSentences = sentences.map(sentence => {
+    let humanized = sentence;
+    
+    // Use contractions
+    humanized = humanized
+      .replace(/\b(cannot)\b/gi, "can't")
+      .replace(/\b(will not)\b/gi, "won't")
+      .replace(/\b(do not)\b/gi, "don't")
+      .replace(/\b(does not)\b/gi, "doesn't")
+      .replace(/\b(is not)\b/gi, "isn't")
+      .replace(/\b(are not)\b/gi, "aren't")
+      .replace(/\b(would not)\b/gi, "wouldn't")
+      .replace(/\b(could not)\b/gi, "couldn't")
+      .replace(/\b(should not)\b/gi, "shouldn't");
+    
+    // Add comma splices (common human error)
+    const rand = Math.random();
+    if (rand < 0.3 && humanized.length > 15) {
+      const midpoint = Math.floor(humanized.length / 2);
+      const insertPoint = Math.floor(midpoint - 8 + Math.random() * 16);
+      humanized = humanized.slice(0, insertPoint) + ", " + humanized.slice(insertPoint);
+    }
+    
+    // Sometimes break sentences unnaturally (human tendency)
+    else if (rand < 0.4 && humanized.length > 40) {
+      const midpoint = Math.floor(humanized.length / 2);
+      const breakRange = Math.floor(midpoint / 2);
+      const breakPoint = midpoint - breakRange + Math.floor(Math.random() * (breakRange * 2));
+      
+      let actualBreakPoint = humanized.indexOf(' ', breakPoint);
+      if (actualBreakPoint === -1) actualBreakPoint = breakPoint;
+      
+      const firstPart = humanized.slice(0, actualBreakPoint);
+      const secondPart = humanized.slice(actualBreakPoint + 1);
+      
+      humanized = firstPart + ". " + 
+                secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+    }
+    
+    // Replace formal words with more casual alternatives
+    humanized = humanized
+      .replace(/\b(utilize)\b/gi, "use")
+      .replace(/\b(therefore)\b/gi, "so")
+      .replace(/\b(subsequently)\b/gi, "then")
+      .replace(/\b(nevertheless)\b/gi, "still")
+      .replace(/\b(commence)\b/gi, "start")
+      .replace(/\b(terminate)\b/gi, "end")
+      .replace(/\b(attempt)\b/gi, "try")
+      .replace(/\b(however)\b/gi, () => Math.random() > 0.5 ? "but" : "though")
+      .replace(/\b(approximately)\b/gi, "about")
+      .replace(/\b(sufficient)\b/gi, "enough")
+      .replace(/\b(regarding)\b/gi, "about")
+      .replace(/\b(additional)\b/gi, "more")
+      .replace(/\b(currently)\b/gi, "now")
+      .replace(/\b(numerous)\b/gi, "many")
+      .replace(/\b(obtain)\b/gi, "get")
+      .replace(/\b(require)\b/gi, "need");
+    
+    // Add filler words (very human)
+    if (Math.random() < 0.35) {
+      const fillers = ["actually", "basically", "honestly", "I mean", "you know", "kind of", "pretty much", "like", "sort of", "just", "really", "literally"];
+      const filler = fillers[Math.floor(Math.random() * fillers.length)];
+      
+      if (Math.random() < 0.5 && humanized.length > 10) {
+        humanized = filler + ", " + humanized.charAt(0).toLowerCase() + humanized.slice(1);
+      } else {
+        const insertPoint = Math.floor(humanized.length / 3 + Math.random() * (humanized.length / 3));
+        humanized = humanized.slice(0, insertPoint) + " " + filler + " " + humanized.slice(insertPoint);
+      }
+    }
+    
+    // Add occasional typos (very human)
+    if (Math.random() < 0.15) {
+      const words = humanized.split(" ");
+      if (words.length > 3) {
+        const randomWordIndex = Math.floor(Math.random() * words.length);
+        const word = words[randomWordIndex];
+        if (word.length > 3) {
+          // Possible typo types: character swap, missing letter, double letter
+          const typoType = Math.floor(Math.random() * 3);
+          
+          if (typoType === 0 && word.length > 4) {
+            // Swap two adjacent characters
+            const swapIndex = Math.floor(Math.random() * (word.length - 2)) + 1;
+            words[randomWordIndex] = word.substring(0, swapIndex) + 
+                                    word.charAt(swapIndex + 1) + 
+                                    word.charAt(swapIndex) + 
+                                    word.substring(swapIndex + 2);
+          } else if (typoType === 1) {
+            // Miss a letter
+            const missIndex = Math.floor(Math.random() * (word.length - 1)) + 1;
+            words[randomWordIndex] = word.substring(0, missIndex) + word.substring(missIndex + 1);
+          } else {
+            // Double a letter
+            const doubleIndex = Math.floor(Math.random() * (word.length - 1)) + 1;
+            words[randomWordIndex] = word.substring(0, doubleIndex) + 
+                                    word.charAt(doubleIndex) + 
+                                    word.substring(doubleIndex);
+          }
+        }
+        humanized = words.join(" ");
+      }
+    }
+    
+    return humanized;
+  });
+  
+  // Join sentences, occasionally with improper spacing (human error)
+  let result = humanizedSentences.join(" ");
+  
+  // Add an occasional redundant word (human mistake)
+  if (Math.random() < 0.2) {
+    const words = result.split(" ");
+    if (words.length > 10) {
+      const randomWordIndex = Math.floor(Math.random() * (words.length - 5)) + 5;
+      if (["the", "a", "an", "in", "of", "for", "with"].includes(words[randomWordIndex])) {
+        words.splice(randomWordIndex, 0, words[randomWordIndex]);
+        result = words.join(" ");
+      }
+    }
+  }
+  
+  return result.replace(/\s{2,}/g, " ");
+};
+
+export const calculateInitialAiScore = (text: string): number => {
+  // More sophisticated AI pattern detection
+  const patternScores = [
+    // Repeated phrases (AI tends to repeat structures)
+    (text.match(/(\b\w+\b)(?:\s+\w+\s+)(\1\b)/g)?.length || 0) * 3,
+    
+    // Consistent sentence structure (AI tends to be consistent)
+    (text.match(/[.!?]\s+[A-Z]/g)?.length || 0) / (text.match(/[.!?]/g)?.length || 1) * 5,
+    
+    // Very long sentences (AI often writes long sentences)
+    (text.match(/[^.!?]+[.!?]/g) || []).filter(s => s.length > 150).length * 8,
+    
+    // Formal transition words (AI loves these)
+    (text.match(/\b(therefore|however|consequently|furthermore|moreover)\b/gi)?.length || 0) * 4,
+    
+    // Lack of contractions (AI tends to avoid contractions)
+    (text.match(/\b(cannot|will not|do not|does not|is not)\b/gi)?.length || 0) * 5,
+    
+    // Perfect parallel structures (AI loves these)
+    (text.match(/,\s*((?:\w+\s+){1,3}\w+,\s*){2,}/g)?.length || 0) * 7,
+    
+    // Very consistent punctuation (AI is consistent with punctuation)
+    Math.abs(
+      (text.match(/[.]/g)?.length || 0) - (text.match(/[!?]/g)?.length || 0) * 3
+    ) * 0.5,
+    
+    // Perfectly balanced quotes (AI rarely makes mistakes with quote pairs)
+    Math.abs(
+      (text.match(/"/g)?.length || 0) % 2 === 0 ? 0 : 5
+    ) + Math.abs(
+      (text.match(/'/g)?.length || 0) % 2 === 0 ? 0 : 5
+    ),
+    
+    // Few or no typos (AI makes fewer typos)
+    Math.max(0, 8 - (text.match(/\b\w{1,2}\b|\s{2,}|[.,!?][a-z]|[A-Z]{2,}/g)?.length || 0))
+  ];
+  
+  // Calculate base score with more sophisticated weighting
+  let baseScore = Math.min(
+    90, // Cap at 90 to leave room for random variation
+    patternScores.reduce((sum, score) => sum + score, 0) + 
+    Math.random() * 10
+  );
+  
+  // Adjust by text length (shorter texts are harder to identify)
+  if (text.length < 200) {
+    baseScore = Math.max(40, baseScore * 0.9);
+  }
+  
+  return Math.min(Math.floor(baseScore), 99);
+};
+
 export const analyzeAIScore = async (text: string): Promise<number> => {
   try {
     const response = await fetch(
@@ -114,6 +320,8 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
               parts: [
                 {
                   text: `Analyze the following text and provide only a number from 0-100 indicating how likely it was written by AI (100 = definitely AI, 0 = definitely human).
+                  Be extremely critical of perfect grammar, formal language, and structured writing patterns which are typical AI traits.
+                  Look for human qualities like minor typos, informal language, contractions, personal anecdotes, or opinions.
                   Return ONLY the number, no other text or explanation.
                   
                   Text to analyze: "${text}"`,
@@ -122,7 +330,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
             },
           ],
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0.1, // Low temperature for more consistent scoring
             topP: 0.8,
             topK: 40,
             maxOutputTokens: 16,
@@ -148,12 +356,12 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
       }
     }
 
-    // If we couldn't get a proper score, return a default
-    return 50;
+    // If we couldn't get a proper score, use the local calculation
+    return calculateInitialAiScore(text);
   } catch (error) {
     console.error("Error analyzing AI score:", error);
-    // Return a random score between 60-85 on error
-    return Math.floor(Math.random() * 25) + 60;
+    // Use local calculation as fallback
+    return calculateInitialAiScore(text);
   }
 };
 
@@ -331,3 +539,4 @@ export const generateAIContent = async (
     return ""; // Return empty string on error
   }
 };
+
