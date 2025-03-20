@@ -1,13 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { detectAIContent } from '@/services/ai';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Container } from '@/components/ui/container';
 import DetectorInput from './DetectorInput';
 import DetectorOutput from './DetectorOutput';
 import { sampleTexts } from '../humanizer/SampleTexts';
 
 const DetectorTool = () => {
+  const { toast } = useToast();
   const [inputText, setInputText] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);

@@ -6,6 +6,7 @@ import HeroSection from './ai-writer/HeroSection';
 import FeaturesSection from './ai-writer/FeaturesSection';
 import HowItWorksSection from './ai-writer/HowItWorksSection';
 import CTASection from './ai-writer/CTASection';
+import WriterTool from '@/components/ai-writer/WriterTool';
 
 const AIWriterFeature = () => {
   return (
@@ -13,6 +14,7 @@ const AIWriterFeature = () => {
       <NavBar />
       <main className="flex-grow pt-16">
         <HeroSection />
+        <WriterTool />
         <FeaturesSection />
         <HowItWorksSection />
         <CTASection />

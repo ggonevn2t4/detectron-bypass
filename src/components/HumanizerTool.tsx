@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, FileEdit, Sparkles } from 'lucide-react';
@@ -11,8 +10,8 @@ import { Container } from '@/components/ui/container';
 import HumanizerInput from './humanizer/HumanizerInput';
 import HumanizerOutput from './humanizer/HumanizerOutput';
 import ModeSelector from './humanizer/ModeSelector';
-import PlaceholderTab from './humanizer/PlaceholderTab';
-import { sampleTexts } from './humanizer/SampleTexts';
+import DetectorTool from './ai-detector/DetectorTool';
+import WriterTool from './ai-writer/WriterTool';
 
 const HumanizerTool = () => {
   const { toast } = useToast();
@@ -69,7 +68,6 @@ const HumanizerTool = () => {
     setOptimizationHistory([]);
     
     try {
-      // Show progress animation
       const progressInterval = setInterval(() => {
         setProgressValue(prev => {
           if (prev >= 95) {
@@ -80,7 +78,6 @@ const HumanizerTool = () => {
         });
       }, 300);
       
-      // Analyze initial AI score
       let initialAiScore: number;
       if (usingRealAI) {
         initialAiScore = await analyzeAIScore(inputText);
@@ -89,10 +86,8 @@ const HumanizerTool = () => {
       }
       setAiDetectionScore(initialAiScore);
       
-      // First humanization pass
       let humanized: string;
       if (usingRealAI) {
-        // Pass the advanced settings to the humanization function
         humanized = await humanizeTextWithGemini(
           inputText, 
           undefined, 
@@ -106,10 +101,8 @@ const HumanizerTool = () => {
         humanized = humanizeTextLocally(inputText);
       }
       
-      // Set initial output
       setOutputText(humanized);
       
-      // Get human score after first pass
       let finalHumanScore: number;
       if (usingRealAI) {
         const newAiScore = await analyzeAIScore(humanized);
@@ -118,7 +111,6 @@ const HumanizerTool = () => {
         finalHumanScore = 100 - calculateInitialAiScore(humanized);
       }
       
-      // Add to history
       setOptimizationHistory([{
         score: finalHumanScore,
         text: humanized
@@ -126,7 +118,6 @@ const HumanizerTool = () => {
       
       setHumanScore(finalHumanScore);
       
-      // Auto optimize if enabled and score is below target
       if (autoOptimize && finalHumanScore < humanScoreTarget && iterations > 1) {
         await runOptimizationIterations(humanized, finalHumanScore, iterations - 1);
       } else {
@@ -164,7 +155,6 @@ const HumanizerTool = () => {
     try {
       setOptimizationStage(prev => prev + 1);
       
-      // Optimize text further
       let optimized: string;
       if (usingRealAI) {
         optimized = await humanizeTextWithGemini(
@@ -181,7 +171,6 @@ const HumanizerTool = () => {
         optimized = humanizeTextLocally(text);
       }
       
-      // Calculate new score
       let newHumanScore: number;
       if (usingRealAI) {
         const newAiScore = await analyzeAIScore(optimized);
@@ -190,17 +179,14 @@ const HumanizerTool = () => {
         newHumanScore = 100 - calculateInitialAiScore(optimized);
       }
       
-      // Update display
       setOutputText(optimized);
       setHumanScore(newHumanScore);
       
-      // Add to history
       setOptimizationHistory(prev => [...prev, {
         score: newHumanScore,
         text: optimized
       }]);
       
-      // Continue optimization if needed
       if (newHumanScore < humanScoreTarget && remainingIterations > 1) {
         await runOptimizationIterations(optimized, newHumanScore, remainingIterations - 1);
       } else {
@@ -230,7 +216,6 @@ const HumanizerTool = () => {
     setProgressValue(0);
     
     try {
-      // Progress animation
       const progressInterval = setInterval(() => {
         setProgressValue(prev => {
           if (prev >= 95) {
@@ -243,10 +228,8 @@ const HumanizerTool = () => {
       
       setOptimizationStage(prev => prev + 1);
       
-      // Get current human score
       const currentScore = humanScore || 0;
       
-      // Try to optimize further with advanced settings
       let optimized: string;
       if (usingRealAI) {
         optimized = await humanizeTextWithGemini(
@@ -263,7 +246,6 @@ const HumanizerTool = () => {
         optimized = humanizeTextLocally(outputText);
       }
       
-      // Calculate new score
       let newHumanScore: number;
       if (usingRealAI) {
         const newAiScore = await analyzeAIScore(optimized);
@@ -272,13 +254,11 @@ const HumanizerTool = () => {
         newHumanScore = 100 - calculateInitialAiScore(optimized);
       }
       
-      // Add to history
       setOptimizationHistory(prev => [...prev, {
         score: newHumanScore,
         text: optimized
       }]);
       
-      // Update display
       setOutputText(optimized);
       setHumanScore(newHumanScore);
       setProgressValue(100);
@@ -382,7 +362,6 @@ const HumanizerTool = () => {
             <TabsContent value="humanizer" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Left Column - Input */}
                   <HumanizerInput 
                     inputText={inputText}
                     wordCount={wordCount}
@@ -404,7 +383,6 @@ const HumanizerTool = () => {
                     setWritingStyle={setWritingStyle}
                   />
                   
-                  {/* Right Column - Output */}
                   <HumanizerOutput 
                     outputText={outputText}
                     humanScore={humanScore}
@@ -418,20 +396,12 @@ const HumanizerTool = () => {
               </div>
             </TabsContent>
             
-            {/* Detector Tab Content - Simplified placeholder */}
             <TabsContent value="detector">
-              <PlaceholderTab 
-                title="AI Detector Feature" 
-                description="Analyze text to determine if it was written by AI or a human."
-              />
+              <DetectorTool />
             </TabsContent>
             
-            {/* Writer Tab Content - Simplified placeholder */}
             <TabsContent value="writer">
-              <PlaceholderTab 
-                title="AI Writer Feature" 
-                description="Generate high-quality content on any topic."
-              />
+              <WriterTool />
             </TabsContent>
           </Tabs>
         </div>
