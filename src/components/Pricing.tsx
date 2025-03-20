@@ -114,7 +114,6 @@ const Pricing = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -127,10 +126,6 @@ const Pricing = () => {
               setTimeout(() => {
                 entry.target.classList.add('translate-y-0', 'opacity-100');
               }, 200);
-            } else if (entry.target === bannerRef.current) {
-              setTimeout(() => {
-                entry.target.classList.add('translate-y-0', 'opacity-100');
-              }, 100);
             }
             observer.unobserve(entry.target);
           }
@@ -145,9 +140,6 @@ const Pricing = () => {
     if (subtitleRef.current) {
       observer.observe(subtitleRef.current);
     }
-    if (bannerRef.current) {
-      observer.observe(bannerRef.current);
-    }
 
     return () => {
       if (titleRef.current) {
@@ -155,9 +147,6 @@ const Pricing = () => {
       }
       if (subtitleRef.current) {
         observer.unobserve(subtitleRef.current);
-      }
-      if (bannerRef.current) {
-        observer.unobserve(bannerRef.current);
       }
     };
   }, []);
@@ -212,16 +201,6 @@ const Pricing = () => {
 
   return (
     <section id="pricing" ref={sectionRef} className="relative pt-16 pb-32 section">
-      {/* Promotional Banner */}
-      <div 
-        ref={bannerRef} 
-        className="w-full bg-primary text-white py-3 px-4 text-center mb-12 transition-all duration-700 transform translate-y-8 opacity-0"
-      >
-        <span className="font-medium">
-          Back to School Special! - 🍎 📚 Save up to 45%! Don't miss out – offer ends April 2.
-        </span>
-      </div>
-
       {/* Background elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full filter blur-3xl opacity-70"></div>
@@ -286,3 +265,4 @@ const Pricing = () => {
 };
 
 export default Pricing;
+
