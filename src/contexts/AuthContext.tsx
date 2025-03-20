@@ -4,28 +4,37 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface AuthUser extends User {
+  name?: string;
+  image?: string;
+}
+
 interface AuthContextProps {
-  user: User | null;
+  user: AuthUser | null;
   session: Session | null;
   loading: boolean;
+  isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: { username: string; full_name?: string }) => Promise<void>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>; // Alias for signOut
 }
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   session: null,
   loading: true,
+  isAuthenticated: false,
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  logout: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -36,7 +45,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log('Auth state changed:', event);
         setSession(session);
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          // Add name and image properties from user metadata if available
+          const authUser: AuthUser = {
+            ...session.user,
+            name: session.user.user_metadata?.full_name || 
+                  session.user.user_metadata?.username || 
+                  session.user.email?.split('@')[0] || '',
+            image: session.user.user_metadata?.avatar_url || '',
+          };
+          setUser(authUser);
+        } else {
+          setUser(null);
+        }
         setLoading(false);
       }
     );
@@ -44,7 +65,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Add name and image properties from user metadata if available
+        const authUser: AuthUser = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || 
+                session.user.user_metadata?.username || 
+                session.user.email?.split('@')[0] || '',
+          image: session.user.user_metadata?.avatar_url || '',
+        };
+        setUser(authUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -118,8 +151,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Provide logout as an alias to signOut for compatibility
+  const logout = signOut;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      isAuthenticated: !!user, 
+      signIn, 
+      signUp, 
+      signOut,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
