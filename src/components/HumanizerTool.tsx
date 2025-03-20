@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,8 +40,6 @@ const HumanizerTool = () => {
   const [progressValue, setProgressValue] = useState(0);
   const [currentTab, setCurrentTab] = useState('humanizer');
   const [usingRealAI, setUsingRealAI] = useState(true);
-  const [processingAttempts, setProcessingAttempts] = useState(0);
-  const [apiLimited, setApiLimited] = useState(false);
 
   const [writerTopic, setWriterTopic] = useState('');
   const [writerLength, setWriterLength] = useState<'short' | 'medium' | 'long'>('medium');
@@ -91,6 +90,91 @@ const HumanizerTool = () => {
     updateDetectorWordCount(sampleTexts[randomIndex]);
   };
 
+  const calculateInitialAiScore = (text: string) => {
+    const patternScores = [
+      text.match(/(\b\w+\b)(?:\s+\w+\s+)(\1\b)/g)?.length || 0,
+      (text.match(/[.!?]\s+[A-Z]/g)?.length || 0) / (text.match(/[.!?]/g)?.length || 1),
+      (text.match(/[^.!?]+[.!?]/g) || []).filter(s => s.length > 150).length,
+      (text.match(/\b(therefore|however|consequently|furthermore|moreover)\b/gi)?.length || 0),
+      (text.match(/\b(cannot|will not|do not|does not|is not)\b/gi)?.length || 0),
+    ];
+    
+    const baseScore = Math.min(
+      85,
+      patternScores.reduce((sum, score) => sum + score, 0) * 5 + 
+      Math.random() * 15
+    );
+    
+    return Math.min(Math.floor(baseScore), 99);
+  };
+
+  const humanizeText = (text: string) => {
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    
+    const humanizedSentences = sentences.map(sentence => {
+      let humanized = sentence;
+      
+      humanized = humanized
+        .replace(/\b(cannot)\b/gi, "can't")
+        .replace(/\b(will not)\b/gi, "won't")
+        .replace(/\b(do not)\b/gi, "don't")
+        .replace(/\b(does not)\b/gi, "doesn't")
+        .replace(/\b(is not)\b/gi, "isn't")
+        .replace(/\b(are not)\b/gi, "aren't")
+        .replace(/\b(would not)\b/gi, "wouldn't")
+        .replace(/\b(could not)\b/gi, "couldn't")
+        .replace(/\b(should not)\b/gi, "shouldn't");
+      
+      const rand = Math.random();
+      if (rand < 0.2 && humanized.length > 15) {
+        const midpoint = Math.floor(humanized.length / 2);
+        const insertPoint = Math.floor(midpoint - 8 + Math.random() * 16);
+        humanized = humanized.slice(0, insertPoint) + ", " + humanized.slice(insertPoint);
+      } else if (rand < 0.35 && humanized.length > 40) {
+        const midpoint = Math.floor(humanized.length / 2);
+        const breakRange = Math.floor(midpoint / 2);
+        const breakPoint = midpoint - breakRange + Math.floor(Math.random() * (breakRange * 2));
+        
+        let actualBreakPoint = humanized.indexOf(' ', breakPoint);
+        if (actualBreakPoint === -1) actualBreakPoint = breakPoint;
+        
+        const firstPart = humanized.slice(0, actualBreakPoint);
+        const secondPart = humanized.slice(actualBreakPoint + 1);
+        
+        humanized = firstPart + ". " + 
+                   secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+      }
+      
+      humanized = humanized
+        .replace(/\b(utilize)\b/gi, "use")
+        .replace(/\b(therefore)\b/gi, "so")
+        .replace(/\b(subsequently)\b/gi, "then")
+        .replace(/\b(nevertheless)\b/gi, "still")
+        .replace(/\b(commence)\b/gi, "start")
+        .replace(/\b(terminate)\b/gi, "end")
+        .replace(/\b(attempt)\b/gi, "try")
+        .replace(/\b(however)\b/gi, () => Math.random() > 0.5 ? "but" : "though")
+        .replace(/\b(approximately)\b/gi, "about")
+        .replace(/\b(sufficient)\b/gi, "enough");
+      
+      if (Math.random() < 0.3) {
+        const fillers = ["actually", "basically", "honestly", "I mean", "you know", "kind of", "pretty much"];
+        const filler = fillers[Math.floor(Math.random() * fillers.length)];
+        
+        if (Math.random() < 0.5 && humanized.length > 10) {
+          humanized = filler + ", " + humanized.charAt(0).toLowerCase() + humanized.slice(1);
+        } else {
+          const insertPoint = Math.floor(humanized.length / 3 + Math.random() * (humanized.length / 3));
+          humanized = humanized.slice(0, insertPoint) + " " + filler + " " + humanized.slice(insertPoint);
+        }
+      }
+      
+      return humanized;
+    });
+    
+    return humanizedSentences.join(" ").replace(/\s{2,}/g, " ");
+  };
+
   const handleHumanize = async () => {
     if (!inputText.trim()) {
       toast({
@@ -103,7 +187,6 @@ const HumanizerTool = () => {
     
     setIsProcessing(true);
     setProgressValue(0);
-    setProcessingAttempts(prev => prev + 1);
     
     try {
       const progressInterval = setInterval(() => {
@@ -112,54 +195,31 @@ const HumanizerTool = () => {
             clearInterval(progressInterval);
             return 95;
           }
-          return prev + Math.floor(Math.random() * 5) + 1;
+          return prev + Math.floor(Math.random() * 10) + 1;
         });
       }, 300);
 
       let initialAiScore: number;
-      if (usingRealAI && !apiLimited) {
-        try {
-          initialAiScore = await analyzeAIScore(inputText);
-        } catch (error) {
-          console.log("AI score analysis failed, using calculated score", error);
-          setApiLimited(true);
-          initialAiScore = Math.floor(Math.random() * 25) + 65; // Fallback score
-        }
+      if (usingRealAI) {
+        initialAiScore = await analyzeAIScore(inputText);
       } else {
-        initialAiScore = Math.floor(Math.random() * 25) + 65; // Default AI-like score
+        initialAiScore = calculateInitialAiScore(inputText);
       }
       setAiDetectionScore(initialAiScore);
 
       let humanized: string;
-      try {
+      if (usingRealAI) {
         humanized = await humanizeTextWithGemini(inputText);
-      } catch (error) {
-        console.error("Error in humanization:", error);
-        setApiLimited(true);
-        
-        humanized = inputText
-          .replace(/\b(cannot)\b/gi, "can't")
-          .replace(/\b(will not)\b/gi, "won't")
-          .replace(/\b(do not)\b/gi, "don't");
-        
-        toast({
-          title: "Using Simple Humanization",
-          description: "We're using basic text processing due to API limits",
-          variant: "warning",
-        });
+      } else {
+        humanized = humanizeText(inputText);
       }
       
       let finalHumanScore: number;
-      if (usingRealAI && !apiLimited) {
-        try {
-          const newAiScore = await analyzeAIScore(humanized);
-          finalHumanScore = 100 - newAiScore;
-        } catch (error) {
-          console.log("Final score analysis failed, using calculated score", error);
-          finalHumanScore = Math.min(100, Math.floor(Math.random() * 30) + 70); // High human score
-        }
+      if (usingRealAI) {
+        const newAiScore = await analyzeAIScore(humanized);
+        finalHumanScore = 100 - newAiScore;
       } else {
-        finalHumanScore = Math.min(100, Math.floor(Math.random() * 30) + 70); // Default high human score
+        finalHumanScore = 100 - calculateInitialAiScore(humanized);
       }
       
       setOutputText(humanized);
@@ -176,20 +236,9 @@ const HumanizerTool = () => {
       console.error("Error in humanization process:", error);
       toast({
         title: "Error",
-        description: "We encountered an issue, but applied basic humanization",
-        variant: "warning",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
       });
-      
-      const fallbackHumanized = inputText
-        .replace(/\b(cannot)\b/gi, "can't")
-        .replace(/\b(will not)\b/gi, "won't")
-        .replace(/\b(do not)\b/gi, "don't")
-        .replace(/\b(does not)\b/gi, "doesn't")
-        .replace(/\b(is not)\b/gi, "isn't");
-      
-      setOutputText(fallbackHumanized);
-      setHumanScore(75); // Modest human score for fallback
-      setProgressValue(100);
     } finally {
       setIsProcessing(false);
     }
@@ -209,6 +258,7 @@ const HumanizerTool = () => {
       toast({
         title: "Text Too Short",
         description: "Please enter at least 50 words for accurate analysis",
+        // Change from "warning" to "default" variant
         variant: "default",
       });
     }
@@ -352,25 +402,6 @@ const HumanizerTool = () => {
       setAiDetectionScore(null);
     }
   }, [inputText]);
-
-  useEffect(() => {
-    if (processingAttempts > 3 && apiLimited) {
-      toast({
-        title: "API Rate Limited",
-        description: "We're using local processing due to API rate limits. Results may be less accurate.",
-        variant: "warning",
-      });
-    }
-  }, [processingAttempts, apiLimited, toast]);
-
-  useEffect(() => {
-    if (apiLimited) {
-      const timer = setTimeout(() => {
-        setApiLimited(false);
-      }, 120000); // Try again after 2 minutes
-      return () => clearTimeout(timer);
-    }
-  }, [apiLimited]);
 
   return (
     <section className="py-16 px-6">
@@ -516,29 +547,9 @@ const HumanizerTool = () => {
                     <div className="flex justify-between mb-2">
                       <h3 className="text-lg font-medium">Humanized Result</h3>
                       {humanScore !== null && (
-                        <div className={`flex items-center bg-green-500/10 text-green-600 px-2 py-1 rounded-full text-xs ${
-                          humanScore > 75 
-                            ? 'bg-destructive/10 text-destructive' 
-                            : humanScore > 40
-                            ? 'bg-yellow-500/10 text-yellow-600'
-                            : 'bg-green-500/10 text-green-600'
-                        }`}>
-                          {humanScore > 75 ? (
-                            <>
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              High AI probability
-                            </>
-                          ) : humanScore > 40 ? (
-                            <>
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Medium AI probability
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Likely human-written
-                            </>
-                          )}
+                        <div className="flex items-center bg-green-500/10 text-green-600 px-2 py-1 rounded-full text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {humanScore}% Human Score
                         </div>
                       )}
                     </div>
