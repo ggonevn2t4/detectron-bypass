@@ -71,7 +71,7 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Error calling Gemini API");
+      throw new Error(errorData.error?.message || "Error calling AI service");
     }
 
     const data: GeminiResponse = await response.json();
@@ -89,7 +89,7 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     throw new Error("No response generated");
   } catch (error) {
-    console.error("Error humanizing text with Gemini:", error);
+    console.error("Error humanizing text:", error);
     toast({
       title: "Error",
       description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -133,7 +133,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Error calling Gemini API");
+      throw new Error(errorData.error?.message || "Error analyzing text");
     }
 
     const data: GeminiResponse = await response.json();
@@ -151,7 +151,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
     // If we couldn't get a proper score, return a default
     return 50;
   } catch (error) {
-    console.error("Error analyzing AI score with Gemini:", error);
+    console.error("Error analyzing AI score:", error);
     // Return a random score between 60-85 on error
     return Math.floor(Math.random() * 25) + 60;
   }

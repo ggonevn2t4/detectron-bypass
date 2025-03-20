@@ -279,7 +279,7 @@ const HumanizerTool = () => {
                     className="cursor-pointer" 
                     onClick={() => setUsingRealAI(true)}
                   >
-                    Gemini API
+                    Advanced Mode
                   </Badge>
                   <Badge 
                     variant={!usingRealAI ? "default" : "outline"} 
@@ -366,7 +366,7 @@ const HumanizerTool = () => {
                               <h4 className="font-medium">Tips for best results:</h4>
                               <ul className="list-disc pl-4 space-y-1">
                                 <li>Use text with at least 50 words for better results</li>
-                                <li>{usingRealAI ? 'Gemini works best with English text' : 'The demo works best with formal, academic text'}</li>
+                                <li>{usingRealAI ? 'Advanced mode works best with English text' : 'The demo works best with formal, academic text'}</li>
                                 <li>Check the output for any factual changes</li>
                                 <li>For higher human scores, run the text through multiple times</li>
                               </ul>
@@ -437,7 +437,7 @@ const HumanizerTool = () => {
                       </Button>
                       <div className="text-xs text-muted-foreground flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        {usingRealAI ? 'Powered by Google Gemini API' : 'AI detection avoidance not guaranteed'}
+                        {usingRealAI ? 'Using enhanced AI technology' : 'AI detection avoidance not guaranteed'}
                       </div>
                     </div>
                   </div>
@@ -492,3 +492,4 @@ const HumanizerTool = () => {
 };
 
 export default HumanizerTool;
+
