@@ -52,7 +52,9 @@ const About = () => {
       <main className="flex-grow pt-24">
         <section className="py-16 md:py-24 px-6">
           <div 
-            ref={(el) => (sectionRefs.current[0] = el)}
+            ref={(el) => {
+              if (el) sectionRefs.current[0] = el;
+            }}
             className="container max-w-6xl mx-auto opacity-0"
           >
             <div className="text-center mb-16">
@@ -93,7 +95,9 @@ const About = () => {
         </section>
         
         <section 
-          ref={(el) => (sectionRefs.current[1] = el)}
+          ref={(el) => {
+            if (el) sectionRefs.current[1] = el;
+          }}
           className="py-16 bg-secondary/50 px-6 opacity-0"
         >
           <div className="container max-w-6xl mx-auto">
@@ -124,7 +128,9 @@ const About = () => {
         </section>
         
         <section 
-          ref={(el) => (sectionRefs.current[2] = el)}
+          ref={(el) => {
+            if (el) sectionRefs.current[2] = el;
+          }}
           className="py-16 md:py-24 px-6 opacity-0"
         >
           <div className="container max-w-6xl mx-auto text-center">
