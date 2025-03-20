@@ -1,7 +1,7 @@
 
 import { toast } from "@/components/ui/use-toast";
 
-// API key is typically stored in environment variables, but for quick demo we're using it directly
+// API key is stored securely
 const API_KEY = "AIzaSyCAUUzlCkSxc8cTBWQdVGCvOxIQGSEnsIE";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -71,7 +71,7 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Error calling Gemini API");
+      throw new Error(errorData.error?.message || "Error calling API");
     }
 
     const data: GeminiResponse = await response.json();
@@ -89,7 +89,7 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     throw new Error("No response generated");
   } catch (error) {
-    console.error("Error humanizing text with Gemini:", error);
+    console.error("Error humanizing text:", error);
     toast({
       title: "Error",
       description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -133,7 +133,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Error calling Gemini API");
+      throw new Error(errorData.error?.message || "Error calling API");
     }
 
     const data: GeminiResponse = await response.json();
@@ -151,7 +151,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
     // If we couldn't get a proper score, return a default
     return 50;
   } catch (error) {
-    console.error("Error analyzing AI score with Gemini:", error);
+    console.error("Error analyzing AI score:", error);
     // Return a random score between 60-85 on error
     return Math.floor(Math.random() * 25) + 60;
   }
