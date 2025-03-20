@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MenuIcon, X, LogOut, User } from 'lucide-react';
+import { MenuIcon, X, LogOut, User, Layout } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -38,6 +38,11 @@ const NavBar = () => {
     { title: 'Pricing', path: '/#pricing' },
     { title: 'Features', path: '/#features' },
   ];
+
+  // Add detailed features link for logged-in users
+  const authenticatedLinks = user ? [
+    { title: 'Detailed Features', path: '/features', icon: <Layout className="h-4 w-4 mr-2" /> },
+  ] : [];
 
   const isActive = (path: string) => {
     if (path.includes('#')) {
@@ -100,6 +105,14 @@ const NavBar = () => {
                     Profile
                   </DropdownMenuItem>
                 </Link>
+                {authenticatedLinks.map((link) => (
+                  <Link key={link.path} to={link.path}>
+                    <DropdownMenuItem className="cursor-pointer">
+                      {link.icon}
+                      {link.title}
+                    </DropdownMenuItem>
+                  </Link>
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -147,6 +160,16 @@ const NavBar = () => {
                   )}
                 >
                   {link.title}
+                </Link>
+              ))}
+              {user && authenticatedLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="text-lg font-medium transition-colors text-foreground/80 hover:text-primary flex items-center"
+                >
+                  {link.icon}
+                  <span>{link.title}</span>
                 </Link>
               ))}
             </nav>

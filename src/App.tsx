@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Auth from "./pages/Auth";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
+import FeaturesPage from "./pages/Features";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,11 @@ const AppRoutes = () => {
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/features" element={
+            <ProtectedRoute>
+              <FeaturesPage />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
