@@ -3,9 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Đảm bảo polyfills và configs toàn cục được load đầu tiên
-import 'core-js/stable'
-import 'regenerator-runtime/runtime'
+// Polyfills should be installed if needed, but they're removed for now as they're causing errors
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
