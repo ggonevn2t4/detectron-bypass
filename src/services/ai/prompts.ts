@@ -12,6 +12,24 @@ Restructure sentences to eliminate repetitive or formulaic patterns.
 Incorporate synonyms, idioms, or subtle nuances to enhance authenticity.
 Add minor details or personal flair to make the text relatable and human-like.
 Avoid hallmarks of AI writing, such as redundancy, overly basic phrasing, or unnatural formality.
+
+HUMANIZATION TECHNIQUES TO APPLY:
+1. Use casual language and contractions (e.g., "don't" instead of "do not")
+2. Mix short, punchy sentences with longer ones for natural rhythm
+3. Add personal touches like "I've been there" or "trust me on this"
+4. Include idioms and metaphors for color (e.g., "hit the nail on the head")
+5. Simplify formal terms to conversational ones (e.g., "begin" → "start")
+6. Inject personality phrases like "here's the thing" or "no kidding"
+7. Occasionally start sentences with words like "And" or "So"
+8. Use rhetorical questions like "Who doesn't love a quick win?"
+9. Show enthusiasm with phrases like "This is seriously cool!"
+10. Keep some minor imperfections or asides for authenticity
+11. Vary paragraph lengths, including some very short ones
+12. Connect directly with the reader using "you" statements
+13. Include occasional opinions or subjective statements
+14. Sprinkle in everyday expressions and mild slang where appropriate
+15. Use punctuation naturally, avoiding overly perfect patterns
+
 The final output should appear as though it was crafted by a skilled human writer, scoring as 100% human-written on AI detection tools.
 
 Examples of transformations:
@@ -179,3 +197,73 @@ Sử dụng từ đồng nghĩa, thành ngữ hoặc cách diễn đạt sáng t
 Thêm các chi tiết nhỏ hoặc cách dùng từ mang tính cá nhân hóa, giống như một người thật viết.
 Tránh các đặc điểm thường thấy trong văn bản AI, như sự lặp lại không cần thiết, câu quá đơn giản hoặc quá trang trọng.
 Mục tiêu cuối cùng là tạo ra văn bản mà khi kiểm tra bởi các công cụ phát hiện AI, nó sẽ được đánh giá là 100% do con người viết.`;
+
+// Training guidelines for humanization 
+export const humanizationTrainingGuidelines = `
+TRAINING GUIDELINES FOR AI HUMANIZATION
+
+1. DATASET PREPARATION
+- Create a diverse collection of text samples (AI-generated and human-written)
+- Cover various topics: technology, lifestyle, education, business, creative writing
+- Include different styles: casual conversations, professional articles, personal stories
+- Source authentic human content from blogs, forums, social media, emails
+- Balance examples of formal AI text with natural human expression
+
+2. KEY HUMAN WRITING TRAITS TO LEARN
+- Casual language with contractions (e.g., "don't", "I'll", "you're")
+- Variable sentence structure and length for natural rhythm
+- Personal touches and subjective opinions
+- Idiomatic expressions and metaphors
+- Occasional imperfections or tangents
+- Conversational transitions between ideas
+- Direct reader engagement through questions or "you" statements
+- Emotional language that shows enthusiasm or concern
+
+3. SPECIFIC HUMANIZATION TECHNIQUES
+- Replace formal language with conversational alternatives
+  - "utilize" → "use"
+  - "therefore" → "so"
+  - "commence" → "start"
+  - "obtain" → "get"
+  - "regarding" → "about"
+  
+- Add personality markers
+  - Filler phrases: "basically", "honestly", "you know"
+  - Opinion signals: "I think", "seems like", "in my experience"
+  - Conversational connectors: "anyway", "so here's the thing"
+  
+- Create natural rhythm
+  - Mix short sentences with longer ones
+  - Occasionally start sentences with conjunctions (And, But, So)
+  - Use fragments for emphasis. Like this.
+  
+- Engage the reader
+  - Ask rhetorical questions
+  - Use direct address: "you might wonder"
+  - Add relatable scenarios: "we've all been there"
+  
+- Show emotion
+  - Use enthusiasm: "this is awesome!"
+  - Express emphasis: "seriously", "absolutely", "really"
+  - Include humor or light comments when appropriate
+  
+- Introduce imperfections
+  - Minor redundancies
+  - Casual self-corrections: "or rather", "what I mean is"
+  - Parenthetical asides (just like this one)
+  - Occasional typos (if appropriate for the context)
+
+4. FEEDBACK EVALUATION
+- Test output with detection tools like GPTZero, aiming for 95-100% human score
+- Identify and fix patterns that trigger AI detection
+- Perform regular testing and model refinement
+- Consider having humans review and rate outputs
+
+5. ETHICAL USE GUIDELINES
+- Maintain honesty about AI assistance when appropriate
+- Avoid creating deceptive or harmful content
+- Ensure factual accuracy in all outputs
+- Don't use for academic plagiarism or misleading news
+- Respect copyright and intellectual property
+
+The goal is high-quality, natural-sounding content that preserves the original meaning while appearing authentically human-written.`;
