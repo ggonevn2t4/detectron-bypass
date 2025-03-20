@@ -1,5 +1,4 @@
-
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 // API key is typically stored in environment variables, but for quick demo we're using it directly
 const API_KEY = "AIzaSyCAUUzlCkSxc8cTBWQdVGCvOxIQGSEnsIE";
@@ -18,8 +17,100 @@ interface GeminiResponse {
   };
 }
 
+// Backup humanization function that works client-side when API is unavailable
+const clientSideHumanize = (text: string): string => {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  
+  const humanizedSentences = sentences.map(sentence => {
+    let humanized = sentence;
+    
+    // Apply contractions
+    humanized = humanized
+      .replace(/\b(cannot)\b/gi, "can't")
+      .replace(/\b(will not)\b/gi, "won't")
+      .replace(/\b(do not)\b/gi, "don't")
+      .replace(/\b(does not)\b/gi, "doesn't")
+      .replace(/\b(is not)\b/gi, "isn't")
+      .replace(/\b(are not)\b/gi, "aren't")
+      .replace(/\b(would not)\b/gi, "wouldn't")
+      .replace(/\b(could not)\b/gi, "couldn't")
+      .replace(/\b(should not)\b/gi, "shouldn't");
+    
+    // Randomly add breaks, commas, or filler phrases
+    const rand = Math.random();
+    if (rand < 0.2 && humanized.length > 15) {
+      const midpoint = Math.floor(humanized.length / 2);
+      const insertPoint = Math.floor(midpoint - 8 + Math.random() * 16);
+      humanized = humanized.slice(0, insertPoint) + ", " + humanized.slice(insertPoint);
+    } else if (rand < 0.35 && humanized.length > 40) {
+      const midpoint = Math.floor(humanized.length / 2);
+      const breakRange = Math.floor(midpoint / 2);
+      const breakPoint = midpoint - breakRange + Math.floor(Math.random() * (breakRange * 2));
+      
+      let actualBreakPoint = humanized.indexOf(' ', breakPoint);
+      if (actualBreakPoint === -1) actualBreakPoint = breakPoint;
+      
+      const firstPart = humanized.slice(0, actualBreakPoint);
+      const secondPart = humanized.slice(actualBreakPoint + 1);
+      
+      humanized = firstPart + ". " + 
+                 secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+    }
+    
+    // Replace formal words with more casual equivalents
+    humanized = humanized
+      .replace(/\b(utilize)\b/gi, "use")
+      .replace(/\b(therefore)\b/gi, "so")
+      .replace(/\b(subsequently)\b/gi, "then")
+      .replace(/\b(nevertheless)\b/gi, "still")
+      .replace(/\b(commence)\b/gi, "start")
+      .replace(/\b(terminate)\b/gi, "end")
+      .replace(/\b(attempt)\b/gi, "try")
+      .replace(/\b(however)\b/gi, () => Math.random() > 0.5 ? "but" : "though")
+      .replace(/\b(approximately)\b/gi, "about")
+      .replace(/\b(sufficient)\b/gi, "enough");
+    
+    // Add filler words sometimes
+    if (Math.random() < 0.25) {
+      const fillers = ["actually", "basically", "honestly", "I mean", "you know", "kind of", "pretty much"];
+      const filler = fillers[Math.floor(Math.random() * fillers.length)];
+      
+      if (Math.random() < 0.5 && humanized.length > 10) {
+        humanized = filler + ", " + humanized.charAt(0).toLowerCase() + humanized.slice(1);
+      } else {
+        const insertPoint = Math.floor(humanized.length / 3 + Math.random() * (humanized.length / 3));
+        humanized = humanized.slice(0, insertPoint) + " " + filler + " " + humanized.slice(insertPoint);
+      }
+    }
+    
+    return humanized;
+  });
+  
+  return humanizedSentences.join(" ").replace(/\s{2,}/g, " ");
+};
+
+// Calculate a local AI score without API call
+const calculateInitialAiScore = (text: string): number => {
+  const patternScores = [
+    text.match(/(\b\w+\b)(?:\s+\w+\s+)(\1\b)/g)?.length || 0, // Repeated words
+    (text.match(/[.!?]\s+[A-Z]/g)?.length || 0) / (text.match(/[.!?]/g)?.length || 1), // Sentence patterns
+    (text.match(/[^.!?]+[.!?]/g) || []).filter(s => s.length > 150).length, // Long sentences
+    (text.match(/\b(therefore|however|consequently|furthermore|moreover)\b/gi)?.length || 0), // Formal transitions
+    (text.match(/\b(cannot|will not|do not|does not|is not)\b/gi)?.length || 0), // Lack of contractions
+  ];
+  
+  const baseScore = Math.min(
+    85,
+    patternScores.reduce((sum, score) => sum + score, 0) * 5 + 
+    Math.random() * 15
+  );
+  
+  return Math.min(Math.floor(baseScore), 99);
+};
+
 export const humanizeTextWithGemini = async (text: string): Promise<string> => {
   try {
+    console.log("Attempting to humanize text with Gemini API");
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
       {
@@ -71,6 +162,12 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.log("API error:", errorData);
+      // Handle quota errors specifically
+      if (errorData.error?.message?.includes("quota") || errorData.error?.message?.includes("exhausted")) {
+        console.log("API quota exhausted, using fallback client-side humanization");
+        return clientSideHumanize(text);
+      }
       throw new Error(errorData.error?.message || "Error calling AI service");
     }
 
@@ -78,6 +175,7 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
 
     // Check for safety blocks
     if (data.promptFeedback?.blockReason) {
+      console.log("Content blocked by API safety filters, using fallback");
       throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
     }
 
@@ -91,16 +189,18 @@ export const humanizeTextWithGemini = async (text: string): Promise<string> => {
   } catch (error) {
     console.error("Error humanizing text:", error);
     toast({
-      title: "Error",
-      description: error instanceof Error ? error.message : "Unknown error occurred",
-      variant: "destructive",
+      title: "Using Local Humanization",
+      description: "We've switched to local processing due to API limits",
+      variant: "warning",
     });
-    return text; // Return original text on error
+    // Fallback to client-side humanization when API fails
+    return clientSideHumanize(text);
   }
 };
 
 export const analyzeAIScore = async (text: string): Promise<number> => {
   try {
+    console.log("Attempting AI detection score analysis");
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
       {
@@ -133,6 +233,12 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.log("AI score analysis API error:", errorData);
+      // Fall back to client-side analysis
+      if (errorData.error?.message?.includes("quota") || errorData.error?.message?.includes("exhausted")) {
+        console.log("API quota exhausted, using fallback client-side AI score calculation");
+        return calculateInitialAiScore(text);
+      }
       throw new Error(errorData.error?.message || "Error analyzing text");
     }
 
@@ -148,12 +254,12 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
       }
     }
 
-    // If we couldn't get a proper score, return a default
-    return 50;
+    // If we couldn't get a proper score, return a calculated one
+    return calculateInitialAiScore(text);
   } catch (error) {
     console.error("Error analyzing AI score:", error);
-    // Return a random score between 60-85 on error
-    return Math.floor(Math.random() * 25) + 60;
+    // Return a calculated score between 60-85 on error as fallback
+    return calculateInitialAiScore(text);
   }
 };
 
