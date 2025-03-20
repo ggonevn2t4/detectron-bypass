@@ -11,7 +11,6 @@ interface AuthContextProps {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: { username: string; full_name?: string }) => Promise<void>;
   signOut: () => Promise<void>;
-  getSubscriptionStatus: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -21,7 +20,6 @@ const AuthContext = createContext<AuthContextProps>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
-  getSubscriptionStatus: async () => null,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -120,40 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getSubscriptionStatus = async () => {
-    if (!user) return null;
-    
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching subscription:', error);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error in getSubscriptionStatus:', error);
-      return null;
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      loading, 
-      signIn, 
-      signUp, 
-      signOut,
-      getSubscriptionStatus
-    }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
