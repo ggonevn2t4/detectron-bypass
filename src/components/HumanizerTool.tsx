@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -379,6 +380,66 @@ const HumanizerTool = () => {
       title: "Download complete",
       description: `Your text has been downloaded as ${filename}`,
     });
+  };
+  
+  // Add missing handleDetect function
+  const handleDetect = async () => {
+    if (!detectorText.trim()) {
+      toast({
+        title: "Empty Text",
+        description: "Please enter some text to analyze",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsDetecting(true);
+    setProgressValue(0);
+    
+    try {
+      // Show progress animation
+      const progressInterval = setInterval(() => {
+        setProgressValue(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return 95;
+          }
+          return prev + Math.floor(Math.random() * 10) + 1;
+        });
+      }, 200);
+      
+      // Analyze the text
+      let result;
+      if (usingRealAI) {
+        result = await detectAIContent(detectorText);
+      } else {
+        const aiScore = calculateInitialAiScore(detectorText);
+        const confidence = aiScore > 75 ? 'high' : aiScore > 40 ? 'medium' : 'low';
+        result = {
+          score: aiScore,
+          analysis: aiScore > 75 
+            ? 'The text shows strong patterns of AI generation.'
+            : aiScore > 40
+            ? 'The text shows some patterns that may indicate AI generation.'
+            : 'The text appears to be primarily human-written.',
+          confidence: confidence as 'high' | 'medium' | 'low'
+        };
+      }
+      
+      setDetectionResult(result);
+      setProgressValue(100);
+      
+      clearInterval(progressInterval);
+    } catch (error) {
+      console.error("Error in detection process:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
   useEffect(() => {
@@ -894,4 +955,272 @@ const HumanizerTool = () => {
                           </CardHeader>
                           <CardContent>
                             <div className="w-full bg-muted h-3 rounded-full overflow-hidden">
-                              <div
+                              <div 
+                                className={`h-full ${
+                                  detectionResult.score > 75
+                                    ? 'bg-destructive'
+                                    : detectionResult.score > 40
+                                    ? 'bg-yellow-500'
+                                    : 'bg-green-500'
+                                }`}
+                                style={{ width: `${detectionResult.score}%` }}
+                              />
+                            </div>
+                            
+                            <div className="mt-4 p-3 bg-muted/30 rounded-md text-sm">
+                              <h4 className="font-medium mb-2">Analysis:</h4>
+                              <p>{detectionResult.analysis}</p>
+                              
+                              <div className="mt-3 pt-3 border-t border-border">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">Confidence</span>
+                                  <Badge variant={
+                                    detectionResult.confidence === 'high' 
+                                      ? 'default' 
+                                      : detectionResult.confidence === 'medium'
+                                      ? 'outline'
+                                      : 'secondary'
+                                  }>
+                                    {detectionResult.confidence}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <div className="flex justify-between">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCopy(detectorText)}
+                          >
+                            <Copy className="mr-2 h-4 w-4" />
+                            Copy Text
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            className="border-primary/20 text-foreground hover:border-primary/40 hover:bg-primary/5"
+                            onClick={() => {
+                              setInputText(detectorText);
+                              updateWordCount(detectorText);
+                              setCurrentTab('humanizer');
+                            }}
+                          >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Humanize This Text
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-[300px] border border-dashed border-border rounded-md p-6">
+                        <Eye className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
+                        <h4 className="text-lg font-medium mb-2">No Analysis Yet</h4>
+                        <p className="text-center text-muted-foreground mb-4">
+                          Enter text on the left and click "Detect AI Content" to analyze the text for AI patterns.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="writer" className="focus-visible:outline-none focus-visible:ring-0">
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <h3 className="text-lg font-medium">Generate AI Content</h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="topic" className="mb-2 block">Topic or Prompt</Label>
+                        <Textarea 
+                          id="topic"
+                          placeholder="Describe what you want to write about..."
+                          className="resize-none min-h-[100px]"
+                          value={writerTopic}
+                          onChange={(e) => setWriterTopic(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="length" className="mb-2 block">Length</Label>
+                          <Select
+                            value={writerLength}
+                            onValueChange={(v) => setWriterLength(v as any)}
+                          >
+                            <SelectTrigger id="length">
+                              <SelectValue placeholder="Select length" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short">Short (~100 words)</SelectItem>
+                              <SelectItem value="medium">Medium (~250 words)</SelectItem>
+                              <SelectItem value="long">Long (~500 words)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="tone" className="mb-2 block">Tone</Label>
+                          <Select
+                            value={writerTone}
+                            onValueChange={(v) => setWriterTone(v as any)}
+                          >
+                            <SelectTrigger id="tone">
+                              <SelectValue placeholder="Select tone" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="formal">Formal</SelectItem>
+                              <SelectItem value="casual">Casual</SelectItem>
+                              <SelectItem value="professional">Professional</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        className="w-full bg-primary hover:bg-primary/90"
+                        disabled={!writerTopic.trim() || isGenerating}
+                        onClick={() => {
+                          setIsGenerating(true);
+                          setProgressValue(0);
+                          
+                          // Progress animation
+                          const progressInterval = setInterval(() => {
+                            setProgressValue(prev => {
+                              if (prev >= 95) {
+                                clearInterval(progressInterval);
+                                return 95;
+                              }
+                              return prev + Math.floor(Math.random() * 5) + 1;
+                            });
+                          }, 300);
+                          
+                          // Generate content
+                          generateAIContent(writerTopic, writerLength, writerTone)
+                            .then(content => {
+                              setGeneratedContent(content);
+                              clearInterval(progressInterval);
+                              setProgressValue(100);
+                              
+                              toast({
+                                title: "Content Generated",
+                                description: "AI content has been generated successfully",
+                              });
+                            })
+                            .catch(error => {
+                              console.error("Error generating content:", error);
+                              toast({
+                                title: "Error",
+                                description: error instanceof Error ? error.message : "An unexpected error occurred",
+                                variant: "destructive",
+                              });
+                            })
+                            .finally(() => {
+                              setIsGenerating(false);
+                            });
+                        }}
+                      >
+                        {isGenerating ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="mr-2 h-4 w-4" />
+                            Generate Content
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <h3 className="text-lg font-medium">Generated Content</h3>
+                    </div>
+                    
+                    {isGenerating && (
+                      <div className="mb-4">
+                        <Progress value={progressValue} className="h-1" />
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          {progressValue < 30 
+                            ? 'Analyzing topic...' 
+                            : progressValue < 60
+                            ? 'Crafting content...'
+                            : progressValue < 95
+                            ? 'Refining output...'
+                            : 'Finalizing content...'}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="relative">
+                      <Textarea 
+                        placeholder="Generated content will appear here..."
+                        className="min-h-[300px] resize-none p-4 text-base"
+                        value={generatedContent}
+                        readOnly
+                      />
+                      {generatedContent && (
+                        <div className="absolute bottom-3 right-3 flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => handleCopy(generatedContent)}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copy
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {generatedContent && (
+                      <div className="mt-4 flex justify-between">
+                        <Button
+                          variant="outline"
+                          className="border-primary/20 text-foreground hover:border-primary/40 hover:bg-primary/5"
+                          onClick={() => handleDownload(generatedContent, 'ai-content.txt')}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Export
+                        </Button>
+                        
+                        <Button
+                          variant="default"
+                          className="bg-primary hover:bg-primary/90"
+                          onClick={() => {
+                            setInputText(generatedContent);
+                            updateWordCount(generatedContent);
+                            setCurrentTab('humanizer');
+                            
+                            toast({
+                              title: "Content Transferred",
+                              description: "You can now humanize the generated content",
+                            });
+                          }}
+                        >
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Humanize This
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HumanizerTool;
