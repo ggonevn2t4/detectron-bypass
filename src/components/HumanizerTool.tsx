@@ -12,6 +12,7 @@ import HumanizerOutput from './humanizer/HumanizerOutput';
 import ModeSelector from './humanizer/ModeSelector';
 import DetectorTool from './ai-detector/DetectorTool';
 import WriterTool from './ai-writer/WriterTool';
+import { sampleTexts } from './humanizer/SampleTexts';
 
 const HumanizerTool = () => {
   const { toast } = useToast();
@@ -26,7 +27,6 @@ const HumanizerTool = () => {
   const [usingRealAI, setUsingRealAI] = useState(true);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
-  // Advanced settings
   const [humanScoreTarget, setHumanScoreTarget] = useState(95);
   const [humanizationApproach, setHumanizationApproach] = useState<'standard' | 'aggressive' | 'ultra'>('standard');
   const [iterations, setIterations] = useState(1);
