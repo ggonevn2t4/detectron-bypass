@@ -19,6 +19,7 @@ import HumanizerFeature from "./pages/features/HumanizerFeature";
 import AIWriterFeature from "./pages/features/AIWriterFeature";
 import AIDetectorFeature from "./pages/features/AIDetectorFeature";
 import ExportFeature from "./pages/features/ExportFeature";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +45,7 @@ const AppRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
