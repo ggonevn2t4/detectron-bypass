@@ -40,23 +40,27 @@ export const useUserLimits = () => {
       });
       
       if (error) throw error;
-
-      // Chuyển đổi dữ liệu từ snake_case sang camelCase
-      const limitsData: UserLimits = {
-        plan: data.plan,
-        planName: data.plan_name,
-        humanizationLimit: data.humanization_limit,
-        isHumanizationUnlimited: data.is_humanization_unlimited,
-        humanizationWordsUsed: data.humanization_words_used,
-        contentGenerationLimit: data.content_generation_limit,
-        contentGenerationsUsed: data.content_generations_used,
-        maxWordsPerProcess: data.max_words_per_process,
-        detectionLevel: data.detection_level,
-        hasReachedHumanizationLimit: data.has_reached_humanization_limit,
-        hasReachedContentGenerationLimit: data.has_reached_content_generation_limit
-      };
       
-      setLimits(limitsData);
+      if (typeof data === 'object' && data !== null) {
+        // Chuyển đổi dữ liệu từ snake_case sang camelCase
+        const limitsData: UserLimits = {
+          plan: String(data.plan || 'free'),
+          planName: String(data.plan_name || 'Free'),
+          humanizationLimit: typeof data.humanization_limit === 'number' ? data.humanization_limit : null,
+          isHumanizationUnlimited: Boolean(data.is_humanization_unlimited),
+          humanizationWordsUsed: Number(data.humanization_words_used || 0),
+          contentGenerationLimit: Number(data.content_generation_limit || 0),
+          contentGenerationsUsed: Number(data.content_generations_used || 0),
+          maxWordsPerProcess: Number(data.max_words_per_process || 1000),
+          detectionLevel: String(data.detection_level || 'basic'),
+          hasReachedHumanizationLimit: Boolean(data.has_reached_humanization_limit),
+          hasReachedContentGenerationLimit: Boolean(data.has_reached_content_generation_limit)
+        };
+        
+        setLimits(limitsData);
+      } else {
+        throw new Error("Invalid data format returned from check_user_limits");
+      }
     } catch (error) {
       console.error('Error fetching user limits:', error);
       toast({

@@ -24,6 +24,11 @@ import { UsageStats } from '@/components/dashboard/UsageStats';
 import { RecentActivities } from '@/components/dashboard/RecentActivities';
 import { SubscriptionStatus } from '@/components/dashboard/SubscriptionStatus';
 
+interface ComponentWithLoadingProps {
+  loading: boolean;
+  limit?: number;
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();

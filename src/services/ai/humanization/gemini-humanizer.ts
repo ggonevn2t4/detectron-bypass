@@ -1,15 +1,17 @@
-
 import { toast } from "@/hooks/use-toast";
 import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
 import { buildHumanizationPrompt } from "./prompt-builder";
 import { humanizeTextLocally } from "./local-humanizer";
 import requestCache from "../cache/request-cache";
+import { OpenRouterModel } from "../openrouter/openrouter-service";
 
 export interface HumanizationOptions {
   targetScore?: number;
   approach?: 'standard' | 'aggressive' | 'ultra';
   style?: string;
   iterationCount?: number;
+  model?: OpenRouterModel | string;
+  previousScore?: number;
 }
 
 // Advanced humanization using DeepSeek API
@@ -33,7 +35,8 @@ export const humanizeTextWithGemini = async (
     const {
       approach = 'standard',
       iterationCount = 1,
-      style = 'general'
+      style = 'general',
+      model = 'deepseek-chat'
     } = options || {};
     
     // Generate a cache key based on the text and options
@@ -64,7 +67,7 @@ export const humanizeTextWithGemini = async (
           "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: model,
           messages: [
             {
               role: "user",
@@ -115,3 +118,6 @@ export const humanizeTextWithGemini = async (
     throw error;
   }
 };
+
+// Make local humanizer available for import
+export { humanizeTextLocally };

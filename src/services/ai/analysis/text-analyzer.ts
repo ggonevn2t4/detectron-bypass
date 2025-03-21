@@ -189,3 +189,60 @@ export const analyzeText = async (text: string): Promise<TextAnalysisResult> => 
     };
   }
 };
+
+/**
+ * Phân tích và trả về điểm AI của một đoạn văn bản
+ */
+export const analyzeAIScore = async (text: string): Promise<number> => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            {
+              role: "user",
+              content: `Analyze this text and estimate what percentage (0-100) was likely written by AI: "${text.substring(0, 2000)}..."`
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 100
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "Error analyzing AI score");
+    }
+
+    const data: DeepSeekResponse = await response.json();
+    
+    if (data.choices && data.choices.length > 0) {
+      const resultText = data.choices[0].message.content;
+      // Extract percentage from result
+      const percentMatch = resultText.match(/(\d+)%/);
+      if (percentMatch && percentMatch[1]) {
+        return Math.min(Math.max(parseInt(percentMatch[1], 10), 0), 100);
+      }
+      
+      // Fallback: extract any number from 0-100
+      const numberMatch = resultText.match(/\b([0-9]{1,2}|100)\b/);
+      if (numberMatch && numberMatch[1]) {
+        return Math.min(Math.max(parseInt(numberMatch[1], 10), 0), 100);
+      }
+    }
+    
+    // Default value if no percentage found
+    return 50;
+  } catch (error) {
+    console.error("Error analyzing AI score:", error);
+    return 50; // Default fallback value
+  }
+};

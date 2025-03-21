@@ -10,7 +10,8 @@ export {
 // Original services
 export { 
   humanizeTextWithGemini, 
-  humanizeTextLocally 
+  humanizeTextLocally,
+  HumanizationOptions
 } from './humanization/gemini-humanizer';
 
 // AI analysis
@@ -19,7 +20,9 @@ export {
 } from './analysis/score-calculator';
 
 export {
-  analyzeAIScore 
+  analyzeAIScore, 
+  analyzeText,
+  TextAnalysisResult
 } from './analysis/text-analyzer';
 
 export {
@@ -58,8 +61,7 @@ export {
 // Humanization
 export {
   humanizeText,
-  optimizeText,
-  runOptimizationIterations
+  OptimizationHistoryItem
 } from './humanization/humanize-service';
 
 // Translation
@@ -69,10 +71,4 @@ export {
   type TranslationResult
 } from './translation/translate-service';
 
-export interface AIGenerationResult {
-  content: string;
-  title?: string;
-  estimatedWordCount?: number;
-  qualityScore?: number;
-  options?: AIGenerationOptions;
-}
+// Re-export the AIGenerationResult type from generate.ts instead of redefining it
