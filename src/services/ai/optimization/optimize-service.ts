@@ -35,11 +35,13 @@ export const optimizeText = async (
     
     let optimized: string;
     if (usingRealAI) {
+      // Convert currentScore to string for the system prompt, or pass it via options
       optimized = await humanizeTextWithGemini(
         text, 
-        currentScore, 
+        undefined, 
         {
           ...options,
+          previousScore: currentScore,
           iterationCount: options.iterationCount || 1
         }
       );
@@ -103,11 +105,13 @@ export const runOptimizationIterations = async (
     
     let optimized: string;
     if (usingRealAI) {
+      // Pass currentScore via options instead of as a string
       optimized = await humanizeTextWithGemini(
         text, 
-        currentScore, 
+        undefined, 
         {
           ...options,
+          previousScore: currentScore,
           iterationCount: options.iterationCount || 1
         }
       );

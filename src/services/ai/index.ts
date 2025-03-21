@@ -1,3 +1,4 @@
+
 // Exporting all functionality from the new modular structure
 
 // OpenRouter Services
@@ -28,13 +29,8 @@ export type {
 
 export {
   analyzeText,
+  analyzeAIScore
 } from './analysis/text-analyzer';
-
-// Add missing analyzeAIScore export
-export const analyzeAIScore = async (text: string): Promise<number> => {
-  const result = await analyzeText(text);
-  return result.aiProbability || 0;
-};
 
 // New OpenRouter services
 export {
@@ -76,6 +72,11 @@ export type {
 export {
   humanizeText,
 } from './humanization/humanize-service';
+
+// Detailed AI detection
+export {
+  detectAIContent
+} from './analysis/detailed-detector';
 
 // Add missing optimization functions from humanize-service
 import { HumanizationOptions } from './humanization/gemini-humanizer';
