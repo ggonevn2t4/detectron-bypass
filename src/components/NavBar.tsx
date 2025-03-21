@@ -1,11 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MenuIcon, X, LogOut, User, Layout, LayoutDashboard } from 'lucide-react';
+import { MenuIcon, X, LogOut, User, Layout, LayoutDashboard, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAdmin } from '@/hooks/useAdmin';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,7 @@ const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,10 +42,10 @@ const NavBar = () => {
     { title: 'Features', path: '/#features' },
   ];
 
-  // Add detailed features link for logged-in users
   const authenticatedLinks = user ? [
     { title: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
     { title: 'Detailed Features', path: '/features', icon: <Layout className="h-4 w-4 mr-2" /> },
+    ...(isAdmin ? [{ title: 'Admin', path: '/admin', icon: <Shield className="h-4 w-4 mr-2" /> }] : []),
   ] : [];
 
   const isActive = (path: string) => {
@@ -54,7 +55,6 @@ const NavBar = () => {
     return location.pathname === path;
   };
 
-  // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (!user) return '?';
     const email = user.email || '';
@@ -148,7 +148,6 @@ const NavBar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in">
           <div className="flex flex-col p-6 space-y-6">

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,7 @@ import AIDetectorFeature from "./pages/features/AIDetectorFeature";
 import ExportFeature from "./pages/features/ExportFeature";
 import FAQ from "./pages/FAQ";
 import Testimonials from "./pages/Testimonials";
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +67,11 @@ const AppRoutes = () => {
           <Route path="/features/ai-writer" element={<AIWriterFeature />} />
           <Route path="/features/ai-detector" element={<AIDetectorFeature />} />
           <Route path="/features/export" element={<ExportFeature />} />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </CSSTransition>
