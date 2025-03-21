@@ -15,6 +15,8 @@ export { optimizeText, runOptimizationIterations } from './optimization/optimize
 export { calculateInitialAiScore } from './analysis/score-calculator';
 export { analyzeAIScore } from './analysis/gemini-analyzer';
 export { detectAIContent } from './analysis/detailed-detector';
+export type { AIDetectionResult } from './analysis/detailed-detector';
 
 // Generation module 
 export { generateAIContent } from './generate';
+export type { AIGenerationOptions, AIGenerationResult } from './generate';
