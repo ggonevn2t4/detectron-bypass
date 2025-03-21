@@ -1,4 +1,3 @@
-
 import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
 import { toast } from "@/hooks/use-toast";
 
@@ -23,6 +22,7 @@ export interface TextAnalysisResult {
   };
   summary: string;
   suggestions: string[];
+  aiProbability?: number; // Added for analyzeAIScore
 }
 
 /**
@@ -185,7 +185,8 @@ export const analyzeText = async (text: string): Promise<TextAnalysisResult> => 
         themeCoherence: 50
       },
       summary: "Không thể phân tích văn bản. Vui lòng thử lại sau.",
-      suggestions: ["Thử lại sau hoặc sử dụng một đoạn văn bản khác."]
+      suggestions: ["Thử lại sau hoặc sử dụng một đoạn văn bản khác."],
+      aiProbability: 50
     };
   }
 };
