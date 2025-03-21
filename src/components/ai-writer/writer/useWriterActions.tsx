@@ -1,6 +1,6 @@
 
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
-import { toast, type ToastProps } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface WriterActionsProps {
   topic: string;
@@ -14,9 +14,6 @@ interface WriterActionsProps {
   setGeneratedResult: (result: AIGenerationResult | null) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   setProgressValue: React.Dispatch<React.SetStateAction<number>>;
-  toast: {
-    (props: ToastProps): void;
-  };
 }
 
 export const useWriterActions = ({
@@ -31,7 +28,6 @@ export const useWriterActions = ({
   setGeneratedResult,
   setIsGenerating,
   setProgressValue,
-  toast
 }: WriterActionsProps) => {
 
   const handleGenerate = async () => {

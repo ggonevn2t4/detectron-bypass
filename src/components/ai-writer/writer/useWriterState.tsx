@@ -1,10 +1,10 @@
 
 import { useState } from 'react';
-import { AIGenerationResult, AIGenerationOptions } from '@/services/ai';
-import { useToast } from '@/hooks/use-toast';
+import { AIGenerationResult } from '@/services/ai';
+import { toast } from '@/hooks/use-toast';
+import { useWriterActions } from './useWriterActions';
 
 export const useWriterState = () => {
-  const { toast } = useToast();
   const [topic, setTopic] = useState('');
   const [length, setLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [tone, setTone] = useState<'formal' | 'casual' | 'professional'>('professional');
@@ -17,6 +17,20 @@ export const useWriterState = () => {
   const [generatedResult, setGeneratedResult] = useState<AIGenerationResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
+
+  const actions = useWriterActions({
+    topic,
+    length,
+    tone,
+    format,
+    audience,
+    includeHeadings,
+    includeFacts,
+    includeQuotes,
+    setGeneratedResult,
+    setIsGenerating,
+    setProgressValue
+  });
 
   return {
     // Form fields
@@ -34,7 +48,7 @@ export const useWriterState = () => {
     isGenerating, setIsGenerating,
     progressValue, setProgressValue,
     
-    // Toast
-    toast
+    // Actions
+    ...actions
   };
 };

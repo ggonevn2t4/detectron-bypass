@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -9,7 +8,7 @@ const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
 export interface ToastProps {
-  id: string
+  id?: string // Make id optional since it's generated internally
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
@@ -101,7 +100,7 @@ export const reducer = (state: State, action: Action): State => {
         addToRemoveQueue(toastId)
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
+          addToRemoveQueue(toast.id!)
         })
       }
 
