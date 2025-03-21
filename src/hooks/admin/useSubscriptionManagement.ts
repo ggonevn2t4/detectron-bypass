@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Subscription } from '@/types/admin';
+import { Subscription, UserProfile } from '@/types/admin';
 
 export const useSubscriptionManagement = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -34,15 +34,31 @@ export const useSubscriptionManagement = () => {
       for (const subscription of subscriptionsData || []) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('username, full_name, avatar_url')
+          .select('*')  // Select all fields to ensure we get id, created_at, etc.
           .eq('id', subscription.user_id)
           .single();
 
-        // Add the subscription with profile data to our array
-        enhancedSubscriptions.push({
-          ...subscription,
-          userProfile: profileError ? undefined : profileData
-        });
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          // Add subscription without profile data
+          enhancedSubscriptions.push(subscription);
+        } else {
+          // Create a proper UserProfile object from the profile data
+          const userProfile: UserProfile = {
+            id: profileData.id,
+            email: '', // We don't have email in profiles table, but it's required by UserProfile
+            username: profileData.username,
+            full_name: profileData.full_name,
+            avatar_url: profileData.avatar_url,
+            created_at: profileData.created_at
+          };
+
+          // Add the subscription with profile data to our array
+          enhancedSubscriptions.push({
+            ...subscription,
+            userProfile
+          });
+        }
       }
 
       setSubscriptions(enhancedSubscriptions);
