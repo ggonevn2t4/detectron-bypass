@@ -1,6 +1,8 @@
 
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface WriterActionsProps {
   topic: string;
@@ -29,6 +31,7 @@ export const useWriterActions = ({
   setIsGenerating,
   setProgressValue,
 }: WriterActionsProps) => {
+  const { user } = useAuth();
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -154,11 +157,70 @@ export const useWriterActions = ({
     });
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Đã lưu nội dung",
-      description: "Nội dung đã được lưu vào tài khoản của bạn",
-    });
+  const handleSave = async () => {
+    // Check if user is logged in
+    if (!user) {
+      toast({
+        title: "Cần đăng nhập",
+        description: "Vui lòng đăng nhập để lưu nội dung",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if we have content to save
+    if (!setGeneratedResult || !topic.trim()) {
+      toast({
+        title: "Không có nội dung",
+        description: "Không có nội dung để lưu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get the current generated result
+      const result = await generateAIContent({
+        topic,
+        length,
+        tone,
+        format,
+        audience,
+        includeHeadings,
+        includeFacts,
+        includeQuotes
+      });
+
+      // Insert content into Supabase
+      const { error } = await supabase
+        .from('content_history')
+        .insert({
+          user_id: user.id,
+          title: result.title,
+          content: result.content,
+          topic: topic,
+          length: length,
+          tone: tone,
+          format: format,
+          audience: audience,
+          word_count: result.estimatedWordCount,
+          quality_score: result.qualityScore
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Đã lưu nội dung",
+        description: "Nội dung đã được lưu vào tài khoản của bạn",
+      });
+    } catch (error) {
+      console.error('Error saving content:', error);
+      toast({
+        title: "Lỗi khi lưu",
+        description: error instanceof Error ? error.message : "Đã xảy ra lỗi khi lưu nội dung",
+        variant: "destructive",
+      });
+    }
   };
 
   return {
