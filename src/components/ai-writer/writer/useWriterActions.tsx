@@ -1,8 +1,10 @@
+
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useUserLimits } from '@/hooks/useUserLimits';
 
 interface WriterActionsProps {
   topic: string;
@@ -35,12 +37,25 @@ export const useWriterActions = ({
 }: WriterActionsProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { canUseContentGeneration, incrementUsage } = useUserLimits();
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
       toast({
         title: "Chủ đề trống",
         description: "Vui lòng nhập chủ đề để viết về",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Kiểm tra giới hạn sử dụng
+    const limitCheck = canUseContentGeneration();
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
         variant: "destructive",
       });
       return;
@@ -76,6 +91,11 @@ export const useWriterActions = ({
       setGeneratedResult(result);
       setProgressValue(100);
       
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ contentGenerations: 1 });
+      }
+      
       toast({
         title: "Đã tạo nội dung",
         description: "Nội dung của bạn đã được tạo thành công",
@@ -95,6 +115,18 @@ export const useWriterActions = ({
 
   const handleRegenerateContent = async () => {
     if (!topic.trim()) return;
+    
+    // Kiểm tra giới hạn sử dụng
+    const limitCheck = canUseContentGeneration();
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsGenerating(true);
     setProgressValue(0);
@@ -124,6 +156,11 @@ export const useWriterActions = ({
       const result = await generateAIContent(options);
       setGeneratedResult(result);
       setProgressValue(100);
+      
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ contentGenerations: 1 });
+      }
     } catch (error) {
       console.error('Error regenerating content:', error);
       toast({

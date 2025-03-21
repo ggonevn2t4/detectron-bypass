@@ -4,6 +4,8 @@ import {
   humanizeText, optimizeText, runOptimizationIterations
 } from '@/services/ai';
 import { HumanizationOptions } from '@/services/ai/humanization/gemini-humanizer';
+import { useUserLimits } from '@/hooks/useUserLimits';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ProcessingDependencies {
   inputText: string;
@@ -28,6 +30,9 @@ export interface ProcessingDependencies {
 
 export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { canUseHumanization, incrementUsage } = useUserLimits();
+  
   const {
     inputText,
     outputText,
@@ -54,6 +59,19 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       toast({
         title: "Empty Text",
         description: "Please enter some text to humanize",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Kiểm tra giới hạn sử dụng
+    const wordCount = inputText.trim().split(/\s+/).length;
+    const limitCheck = canUseHumanization(inputText);
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
         variant: "destructive",
       });
       return;
@@ -86,6 +104,11 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         setHumanScore,
         setAiDetectionScore
       );
+      
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ humanizationWords: wordCount });
+      }
       
       if (autoOptimize && result.score < humanScoreTarget && iterations > 1) {
         await runOptimizationIterations(
@@ -137,12 +160,25 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       return;
     }
     
+    // Kiểm tra giới hạn sử dụng
+    const limitCheck = canUseHumanization(outputText);
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Clear any previous errors
     setError && setError(null);
     setIsProcessing(true);
     
     try {
       const currentScore = humanScore || 0;
+      const wordCount = outputText.trim().split(/\s+/).length;
       
       const options: HumanizationOptions = {
         targetScore: humanScoreTarget,
@@ -162,6 +198,11 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         setOutputText,
         setHumanScore
       );
+      
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ humanizationWords: wordCount });
+      }
       
       toast({
         title: "Optimization Complete",

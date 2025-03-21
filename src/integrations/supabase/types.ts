@@ -81,6 +81,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          content_generation_limit: number | null
+          created_at: string
+          description: string | null
+          detection_level: string
+          humanization_words_limit: number | null
+          id: string
+          is_humanization_unlimited: boolean | null
+          max_words_per_process: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          content_generation_limit?: number | null
+          created_at?: string
+          description?: string | null
+          detection_level: string
+          humanization_words_limit?: number | null
+          id: string
+          is_humanization_unlimited?: boolean | null
+          max_words_per_process?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          content_generation_limit?: number | null
+          created_at?: string
+          description?: string | null
+          detection_level?: string
+          humanization_words_limit?: number | null
+          id?: string
+          is_humanization_unlimited?: boolean | null
+          max_words_per_process?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -114,12 +153,64 @@ export type Database = {
         }
         Relationships: []
       }
+      user_usage: {
+        Row: {
+          content_generations_used: number | null
+          created_at: string
+          humanization_words_used: number | null
+          id: string
+          month: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          content_generations_used?: number | null
+          created_at?: string
+          humanization_words_used?: number | null
+          id?: string
+          month: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          content_generations_used?: number | null
+          created_at?: string
+          humanization_words_used?: number | null
+          id?: string
+          month?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_limits: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: Json
+      }
+      get_user_plan: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: string
+      }
+      increment_user_usage: {
+        Args: {
+          user_uuid: string
+          humanization_words?: number
+          content_generations?: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

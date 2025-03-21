@@ -1,0 +1,170 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+
+export interface UserLimits {
+  plan: string;
+  planName: string;
+  humanizationLimit: number | null;
+  isHumanizationUnlimited: boolean;
+  humanizationWordsUsed: number;
+  contentGenerationLimit: number;
+  contentGenerationsUsed: number;
+  maxWordsPerProcess: number;
+  detectionLevel: string;
+  hasReachedHumanizationLimit: boolean;
+  hasReachedContentGenerationLimit: boolean;
+}
+
+export const useUserLimits = () => {
+  const [limits, setLimits] = useState<UserLimits | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchUserLimits = async () => {
+    if (!user) {
+      setLimits(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Gọi hàm check_user_limits
+      const { data, error } = await supabase.rpc('check_user_limits', {
+        user_uuid: user.id
+      });
+      
+      if (error) throw error;
+
+      // Chuyển đổi dữ liệu từ snake_case sang camelCase
+      const limitsData: UserLimits = {
+        plan: data.plan,
+        planName: data.plan_name,
+        humanizationLimit: data.humanization_limit,
+        isHumanizationUnlimited: data.is_humanization_unlimited,
+        humanizationWordsUsed: data.humanization_words_used,
+        contentGenerationLimit: data.content_generation_limit,
+        contentGenerationsUsed: data.content_generations_used,
+        maxWordsPerProcess: data.max_words_per_process,
+        detectionLevel: data.detection_level,
+        hasReachedHumanizationLimit: data.has_reached_humanization_limit,
+        hasReachedContentGenerationLimit: data.has_reached_content_generation_limit
+      };
+      
+      setLimits(limitsData);
+    } catch (error) {
+      console.error('Error fetching user limits:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải thông tin giới hạn sử dụng",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const incrementUsage = async (options: {
+    humanizationWords?: number;
+    contentGenerations?: number;
+  }) => {
+    if (!user) return false;
+    
+    try {
+      const { humanizationWords = 0, contentGenerations = 0 } = options;
+      
+      // Gọi hàm increment_user_usage
+      const { data, error } = await supabase.rpc('increment_user_usage', {
+        user_uuid: user.id,
+        humanization_words: humanizationWords,
+        content_generations: contentGenerations
+      });
+      
+      if (error) throw error;
+      
+      // Cập nhật lại giới hạn sử dụng
+      fetchUserLimits();
+      
+      return true;
+    } catch (error) {
+      console.error('Error incrementing usage:', error);
+      return false;
+    }
+  };
+
+  // Kiểm tra xem văn bản có vượt quá giới hạn xử lý không
+  const checkTextSizeLimit = (text: string): boolean => {
+    if (!limits) return true; // Nếu chưa có limits, tạm thời cho phép
+    
+    const wordCount = text.trim().split(/\s+/).length;
+    return wordCount <= limits.maxWordsPerProcess;
+  };
+
+  // Kiểm tra xem người dùng có thể sử dụng humanization không
+  const canUseHumanization = (text: string): { allowed: boolean; message?: string } => {
+    if (!limits) return { allowed: true }; // Nếu chưa có limits, tạm thời cho phép
+    
+    if (!checkTextSizeLimit(text)) {
+      return { 
+        allowed: false, 
+        message: `Văn bản quá dài. Giới hạn của gói ${limits.planName} là ${limits.maxWordsPerProcess} từ mỗi lần xử lý.`
+      };
+    }
+    
+    if (limits.isHumanizationUnlimited) {
+      return { allowed: true };
+    }
+    
+    if (limits.hasReachedHumanizationLimit) {
+      return { 
+        allowed: false, 
+        message: `Bạn đã sử dụng hết ${limits.humanizationLimit} từ trong tháng này. Nâng cấp lên gói Pro để có lượt xử lý không giới hạn.`
+      };
+    }
+    
+    const wordCount = text.trim().split(/\s+/).length;
+    const remainingWords = limits.humanizationLimit ? limits.humanizationLimit - limits.humanizationWordsUsed : 0;
+    
+    if (wordCount > remainingWords) {
+      return { 
+        allowed: false, 
+        message: `Văn bản của bạn có ${wordCount} từ, nhưng bạn chỉ còn lại ${remainingWords} từ trong tháng này. Nâng cấp lên gói Pro hoặc giảm độ dài văn bản.`
+      };
+    }
+    
+    return { allowed: true };
+  };
+
+  // Kiểm tra xem người dùng có thể sử dụng content generation không
+  const canUseContentGeneration = (): { allowed: boolean; message?: string } => {
+    if (!limits) return { allowed: true }; // Nếu chưa có limits, tạm thời cho phép
+    
+    if (limits.hasReachedContentGenerationLimit) {
+      return { 
+        allowed: false, 
+        message: `Bạn đã sử dụng hết ${limits.contentGenerationLimit} lượt tạo nội dung trong tháng này. Nâng cấp lên gói Pro để có thêm lượt sử dụng.`
+      };
+    }
+    
+    return { allowed: true };
+  };
+
+  useEffect(() => {
+    fetchUserLimits();
+  }, [user]);
+
+  return {
+    limits,
+    loading,
+    fetchUserLimits,
+    incrementUsage,
+    checkTextSizeLimit,
+    canUseHumanization,
+    canUseContentGeneration
+  };
+};
