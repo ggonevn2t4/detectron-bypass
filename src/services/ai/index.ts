@@ -11,7 +11,7 @@ export {
 export { 
   humanizeTextWithGemini, 
   humanizeTextLocally,
-  HumanizationOptions
+  type HumanizationOptions
 } from './humanization/gemini-humanizer';
 
 // AI analysis
@@ -20,14 +20,19 @@ export {
 } from './analysis/score-calculator';
 
 export {
-  analyzeAIScore, 
   analyzeText,
-  TextAnalysisResult
+  type TextAnalysisResult
 } from './analysis/text-analyzer';
 
 export {
   detectAIContent 
 } from './analysis/detailed-detector';
+
+// Add missing analyzeAIScore export
+export const analyzeAIScore = async (text: string): Promise<number> => {
+  const result = await analyzeText(text);
+  return result.aiProbability || 0;
+};
 
 // New OpenRouter services
 export {
@@ -61,8 +66,79 @@ export {
 // Humanization
 export {
   humanizeText,
-  OptimizationHistoryItem
+  type OptimizationHistoryItem
 } from './humanization/humanize-service';
+
+// Add missing optimization functions
+export const optimizeText = async (
+  text: string,
+  currentScore: number,
+  usingRealAI: boolean,
+  options: HumanizationOptions,
+  setProgressValue: React.Dispatch<React.SetStateAction<number>>,
+  setOptimizationStage: React.Dispatch<React.SetStateAction<number>>,
+  setOptimizationHistory: React.Dispatch<React.SetStateAction<Array<OptimizationHistoryItem>>>,
+  setOutputText: React.Dispatch<React.SetStateAction<string>>,
+  setHumanScore: React.Dispatch<React.SetStateAction<number | null>>
+) => {
+  // Implementation of optimizeText
+  const result = await humanizeText(
+    text,
+    usingRealAI,
+    { ...options, previousScore: currentScore },
+    setProgressValue,
+    setOptimizationStage,
+    setOptimizationHistory,
+    setOutputText,
+    setHumanScore,
+    () => {}
+  );
+  
+  return result;
+};
+
+export const runOptimizationIterations = async (
+  initialText: string,
+  initialScore: number,
+  iterations: number,
+  targetScore: number,
+  usingRealAI: boolean,
+  options: HumanizationOptions,
+  setOptimizationStage: React.Dispatch<React.SetStateAction<number>>,
+  setOptimizationHistory: React.Dispatch<React.SetStateAction<Array<OptimizationHistoryItem>>>,
+  setOutputText: React.Dispatch<React.SetStateAction<string>>,
+  setHumanScore: React.Dispatch<React.SetStateAction<number | null>>,
+  setProgressValue: React.Dispatch<React.SetStateAction<number>>
+) => {
+  let currentText = initialText;
+  let currentScore = initialScore;
+  
+  for (let i = 0; i < iterations; i++) {
+    if (currentScore >= targetScore) {
+      break;
+    }
+    
+    const result = await optimizeText(
+      currentText,
+      currentScore,
+      usingRealAI,
+      { ...options, iterationCount: i + 1 },
+      setProgressValue,
+      setOptimizationStage,
+      setOptimizationHistory,
+      setOutputText,
+      setHumanScore
+    );
+    
+    currentText = result.humanized;
+    currentScore = result.score;
+  }
+  
+  return {
+    text: currentText,
+    score: currentScore
+  };
+};
 
 // Translation
 export {
@@ -70,5 +146,3 @@ export {
   type TranslationOptions,
   type TranslationResult
 } from './translation/translate-service';
-
-// Re-export the AIGenerationResult type from generate.ts instead of redefining it

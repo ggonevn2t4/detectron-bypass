@@ -1,8 +1,10 @@
+
 import { API_KEY, BASE_URL, DeepSeekResponse } from "./common";
 import { isVietnameseText } from "./common";
 import { OpenRouterModel } from "./openrouter/openrouter-service";
 
 export interface AIGenerationOptions {
+  topic?: string;
   length?: 'short' | 'medium' | 'long';
   tone?: 'formal' | 'casual' | 'professional';
   format?: 'article' | 'blog' | 'essay' | 'story' | 'summary';

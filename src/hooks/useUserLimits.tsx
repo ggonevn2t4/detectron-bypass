@@ -41,8 +41,8 @@ export const useUserLimits = () => {
       
       if (error) throw error;
       
-      if (typeof data === 'object' && data !== null) {
-        // Chuyển đổi dữ liệu từ snake_case sang camelCase
+      if (data && typeof data === 'object') {
+        // Convert to proper object type to handle JSON response from Supabase
         const limitsData: UserLimits = {
           plan: String(data.plan || 'free'),
           planName: String(data.plan_name || 'Free'),

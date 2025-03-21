@@ -73,17 +73,17 @@ export const useContentGeneration = ({
     
     try {
       const options: AIGenerationOptions = {
-        topic,
         length,
         tone,
         format,
         audience,
         includeHeadings,
         includeFacts,
-        includeQuotes
+        includeQuotes,
+        topic
       };
       
-      const result = await generateAIContent(options);
+      const result = await generateAIContent(topic, options);
       setGeneratedResult(result);
       setProgressValue(100);
       
@@ -139,17 +139,17 @@ export const useContentGeneration = ({
     
     try {
       const options: AIGenerationOptions = {
-        topic,
         length,
         tone,
         format,
         audience,
         includeHeadings,
         includeFacts,
-        includeQuotes
+        includeQuotes,
+        topic
       };
       
-      const result = await generateAIContent(options);
+      const result = await generateAIContent(topic, options);
       setGeneratedResult(result);
       setProgressValue(100);
       

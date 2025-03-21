@@ -10,7 +10,7 @@ export const generateAIContentWithOpenRouter = async (
 ): Promise<AIGenerationResult> => {
   try {
     const {
-      topic,
+      topic = "",
       length = 'medium',
       tone = 'formal',
       format = 'article',
