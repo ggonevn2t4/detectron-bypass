@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { detectAIContent, AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
 import { HistoryItem, DetectionResult } from './useDetectorState';
+import { SampleContent } from '../SampleContents';
 
 interface UseDetectorActionsProps {
   inputText: string;
@@ -44,6 +45,16 @@ export const useDetectorActions = ({
   const handleSampleText = (sampleText: string) => {
     setInputText(sampleText);
     updateWordCount(sampleText);
+  };
+
+  const handleSampleContent = (sample: SampleContent) => {
+    setInputText(sample.content);
+    updateWordCount(sample.content);
+    
+    toast({
+      title: `Mẫu "${sample.title}" đã được tải`,
+      description: `Đã chọn mẫu từ danh mục ${sample.category}`,
+    });
   };
 
   const handleAnalyze = async () => {
@@ -138,6 +149,7 @@ export const useDetectorActions = ({
     handleInputChange,
     updateWordCount,
     handleSampleText,
+    handleSampleContent,
     handleAnalyze,
     handleCopy,
     handleDownload,

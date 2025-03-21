@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/container';
 import DetectorInput from './DetectorInput';
 import DetectorOutput from './DetectorOutput';
 import { sampleTexts } from '../humanizer/SampleTexts';
+import { sampleContents } from './SampleContents';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDetectorState } from './hooks/useDetectorState';
 import { useDetectorActions } from './hooks/useDetectorActions';
@@ -33,6 +34,7 @@ const DetectorTool = () => {
   const {
     handleInputChange,
     handleSampleText,
+    handleSampleContent,
     handleAnalyze,
     handleCopy,
     handleDownload,
@@ -112,7 +114,9 @@ const DetectorTool = () => {
                     isProcessing={isProcessing}
                     onInputChange={handleInputChange}
                     onSampleText={handleSampleTextClick}
+                    onSampleContent={handleSampleContent}
                     onAnalyze={handleAnalyze}
+                    sampleContents={sampleContents}
                   />
                   <DetectorOutput
                     score={detectionResult?.score ?? null}

@@ -2,10 +2,20 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Info, Activity } from 'lucide-react';
+import { FileText, Info, Activity, BookOpen } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { SampleContent } from './SampleContents';
 
 interface DetectorInputProps {
   inputText: string;
@@ -13,7 +23,9 @@ interface DetectorInputProps {
   isProcessing: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSampleText: () => void;
+  onSampleContent: (sample: SampleContent) => void;
   onAnalyze: () => void;
+  sampleContents: SampleContent[];
 }
 
 const DetectorInput: React.FC<DetectorInputProps> = ({
@@ -22,7 +34,9 @@ const DetectorInput: React.FC<DetectorInputProps> = ({
   isProcessing,
   onInputChange,
   onSampleText,
+  onSampleContent,
   onAnalyze,
+  sampleContents
 }) => {
   return (
     <Card className="p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
@@ -52,6 +66,93 @@ const DetectorInput: React.FC<DetectorInputProps> = ({
           <FileText className="mr-1.5 h-3.5 w-3.5" />
           Sample Text
         </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs font-medium border-border/60 hover:bg-muted/80"
+            >
+              <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+              Content Samples
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-60">
+            <DropdownMenuLabel>Choose a sample by topic</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Academic</DropdownMenuLabel>
+              {sampleContents
+                .filter(sample => sample.category === 'academic')
+                .map(sample => (
+                  <DropdownMenuItem 
+                    key={sample.id} 
+                    onClick={() => onSampleContent(sample)}
+                    className="cursor-pointer"
+                  >
+                    {sample.title}
+                  </DropdownMenuItem>
+                ))
+              }
+            </DropdownMenuGroup>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Business</DropdownMenuLabel>
+              {sampleContents
+                .filter(sample => sample.category === 'business')
+                .map(sample => (
+                  <DropdownMenuItem 
+                    key={sample.id} 
+                    onClick={() => onSampleContent(sample)}
+                    className="cursor-pointer"
+                  >
+                    {sample.title}
+                  </DropdownMenuItem>
+                ))
+              }
+            </DropdownMenuGroup>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Creative</DropdownMenuLabel>
+              {sampleContents
+                .filter(sample => sample.category === 'creative')
+                .map(sample => (
+                  <DropdownMenuItem 
+                    key={sample.id} 
+                    onClick={() => onSampleContent(sample)}
+                    className="cursor-pointer"
+                  >
+                    {sample.title}
+                  </DropdownMenuItem>
+                ))
+              }
+            </DropdownMenuGroup>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Technical</DropdownMenuLabel>
+              {sampleContents
+                .filter(sample => sample.category === 'technical')
+                .map(sample => (
+                  <DropdownMenuItem 
+                    key={sample.id} 
+                    onClick={() => onSampleContent(sample)}
+                    className="cursor-pointer"
+                  >
+                    {sample.title}
+                  </DropdownMenuItem>
+                ))
+              }
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         
         <Popover>
           <PopoverTrigger asChild>
