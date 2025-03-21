@@ -68,3 +68,11 @@ export {
   type TranslationOptions,
   type TranslationResult
 } from './translation/translate-service';
+
+export interface AIGenerationResult {
+  content: string;
+  title?: string;
+  estimatedWordCount?: number;
+  qualityScore?: number;
+  options?: AIGenerationOptions;
+}
