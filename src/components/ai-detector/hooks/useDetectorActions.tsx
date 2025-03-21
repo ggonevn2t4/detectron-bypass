@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { detectAIContent, AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
 import { HistoryItem, DetectionResult } from './useDetectorState';
 import { SampleContent } from '../SampleContents';
+import { exportAsCSV, exportAsPDF } from '../utils/exportUtils';
 
 interface UseDetectorActionsProps {
   inputText: string;
@@ -33,7 +33,6 @@ export const useDetectorActions = ({
     const text = e.target.value;
     setInputText(text);
     updateWordCount(text);
-    // Reset results when input changes
     setDetectionResult(null);
   };
 
@@ -72,7 +71,6 @@ export const useDetectorActions = ({
       const result = await detectAIContent(inputText);
       setDetectionResult(result);
       
-      // Save result to history
       const newHistoryItem: HistoryItem = {
         id: Date.now().toString(),
         text: inputText,
@@ -88,7 +86,7 @@ export const useDetectorActions = ({
         timestamp: new Date()
       };
       
-      setHistory([newHistoryItem, ...history].slice(0, 20)); // Limit history to 20 items
+      setHistory([newHistoryItem, ...history].slice(0, 20));
     } catch (error) {
       console.error('Error analyzing text:', error);
       toast({
@@ -127,6 +125,46 @@ export const useDetectorActions = ({
     });
   };
 
+  const handleExportCSV = (result: AIDetectionResult) => {
+    if (!result) return;
+    
+    try {
+      exportAsCSV(result);
+      
+      toast({
+        title: "Xuất dữ liệu thành công",
+        description: "Kết quả phân tích đã được tải xuống dưới dạng CSV",
+      });
+    } catch (error) {
+      console.error('Error exporting as CSV:', error);
+      toast({
+        title: "Lỗi xuất dữ liệu",
+        description: "Không thể xuất dữ liệu dưới dạng CSV",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportPDF = (result: AIDetectionResult) => {
+    if (!result) return;
+    
+    try {
+      exportAsPDF(result);
+      
+      toast({
+        title: "Xuất dữ liệu thành công",
+        description: "Kết quả phân tích đã được tải xuống dưới dạng PDF",
+      });
+    } catch (error) {
+      console.error('Error exporting as PDF:', error);
+      toast({
+        title: "Lỗi xuất dữ liệu",
+        description: "Không thể xuất dữ liệu dưới dạng PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleHistoryItemClick = (item: HistoryItem, isMobile: boolean) => {
     setInputText(item.text);
     setDetectionResult(item.result as AIDetectionResult);
@@ -153,6 +191,8 @@ export const useDetectorActions = ({
     handleAnalyze,
     handleCopy,
     handleDownload,
+    handleExportCSV,
+    handleExportPDF,
     handleHistoryItemClick,
     handleClearHistory,
     copied

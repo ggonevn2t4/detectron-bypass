@@ -38,6 +38,8 @@ const DetectorTool = () => {
     handleAnalyze,
     handleCopy,
     handleDownload,
+    handleExportCSV,
+    handleExportPDF,
     handleHistoryItemClick,
     handleClearHistory,
     copied
@@ -127,6 +129,8 @@ const DetectorTool = () => {
                     isProcessing={isProcessing}
                     onCopy={handleCopyResult}
                     onDownload={(text) => handleDownload(text, 'ai-analysis.txt')}
+                    onExportCSV={() => detectionResult && handleExportCSV(detectionResult)}
+                    onExportPDF={() => detectionResult && handleExportPDF(detectionResult)}
                     copied={copied}
                   />
                 </div>

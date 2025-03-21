@@ -5,7 +5,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { 
   Signal, Copy, Download, CheckCircle, AlertTriangle, 
-  FileCheck, Sparkles, Lightbulb, ListChecks, ArrowRight 
+  FileCheck, Sparkles, Lightbulb, ListChecks, ArrowRight,
+  FileType, FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DetectorOutputProps {
   score: number | null;
@@ -25,6 +32,8 @@ interface DetectorOutputProps {
   isProcessing: boolean;
   onCopy: () => void;
   onDownload: (text: string, filename: string) => void;
+  onExportCSV: () => void;
+  onExportPDF: () => void;
   copied: boolean;
 }
 
@@ -37,6 +46,8 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
   isProcessing,
   onCopy,
   onDownload,
+  onExportCSV,
+  onExportPDF,
   copied
 }) => {
   const getConfidenceColor = (confidence: string) => {
@@ -162,7 +173,7 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
               </AccordionItem>
             </Accordion>
             
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-wrap gap-2 mt-4">
               <Button
                 variant="outline"
                 className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
@@ -180,14 +191,32 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
                   </>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
-                onClick={() => onDownload(analysis, 'ai-analysis.txt')}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Tải xuống báo cáo
-              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Tải xuống báo cáo
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => onDownload(analysis, 'ai-analysis.txt')}>
+                    <FileType className="mr-2 h-4 w-4" />
+                    <span>Văn bản (.txt)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onExportCSV}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    <span>Bảng tính (.csv)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onExportPDF}>
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    <span>Tài liệu (.pdf)</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </>
