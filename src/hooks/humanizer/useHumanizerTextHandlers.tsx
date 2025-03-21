@@ -1,61 +1,91 @@
 
-import { useToast } from "@/hooks/use-toast";
-import { sampleTexts } from '@/components/humanizer/SampleTexts';
+import { useState, useCallback, useEffect } from 'react';
+import { SampleTexts } from '@/components/humanizer/SampleTexts';
+import { useToast } from '@/hooks/use-toast';
+
+// Debounce function for input handling
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 export const useHumanizerTextHandlers = (
   setInputText: (text: string) => void,
   setWordCount: (count: number) => void
 ) => {
   const { toast } = useToast();
+  const [input, setInput] = useState('');
+  const debouncedInput = useDebounce(input, 300);
+  
+  // Update word count and input text when debounced input changes
+  useEffect(() => {
+    const words = debouncedInput.trim().split(/\s+/);
+    const count = debouncedInput.trim() ? words.length : 0;
+    setWordCount(count);
+    setInputText(debouncedInput);
+  }, [debouncedInput, setInputText, setWordCount]);
+  
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  }, []);
 
-  const updateWordCount = (text: string) => {
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    setWordCount(words);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value;
-    setInputText(text);
-    updateWordCount(text);
-  };
-
-  const handleSampleText = () => {
-    const randomIndex = Math.floor(Math.random() * sampleTexts.length);
-    setInputText(sampleTexts[randomIndex]);
-    updateWordCount(sampleTexts[randomIndex]);
-  };
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const handleSampleText = useCallback(() => {
+    // Randomly select a sample text
+    const randomIndex = Math.floor(Math.random() * SampleTexts.length);
+    const sample = SampleTexts[randomIndex];
+    setInput(sample);
+    
+    // Immediately update for better UX
+    const words = sample.trim().split(/\s+/);
+    const count = sample.trim() ? words.length : 0;
+    setWordCount(count);
+    setInputText(sample);
     
     toast({
-      title: "Copied to clipboard",
-      description: "The text has been copied to your clipboard",
+      title: "Đã tải mẫu văn bản",
+      description: "Mẫu văn bản đã được tải vào trình soạn thảo",
     });
-  };
-  
-  const handleDownload = (text: string, filename: string) => {
-    if (!text) return;
-    
+  }, [setInputText, setWordCount, toast]);
+
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Đã sao chép",
+      description: "Văn bản đã được sao chép vào clipboard",
+    });
+  }, [toast]);
+
+  const handleDownload = useCallback((text: string, filename: string) => {
     const element = document.createElement('a');
-    const file = new Blob([text], {type: 'text/plain'});
+    const file = new Blob([text], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = filename;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    
+
     toast({
-      title: "Download complete",
-      description: `Your text has been downloaded as ${filename}`,
+      title: "Đã tải xuống",
+      description: `Văn bản đã được tải xuống dưới dạng ${filename}`,
     });
-  };
+  }, [toast]);
 
   return {
     handleInputChange,
     handleSampleText,
     handleCopy,
     handleDownload,
-    updateWordCount
+    currentInput: input
   };
 };

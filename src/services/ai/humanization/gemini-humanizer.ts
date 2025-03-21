@@ -3,6 +3,7 @@ import { toast } from "@/components/ui/use-toast";
 import { API_KEY, BASE_URL, GeminiResponse } from "../common";
 import { buildHumanizationPrompt } from "./prompt-builder";
 import { humanizeTextLocally } from "./local-humanizer";
+import requestCache from "../cache/request-cache";
 
 export interface HumanizationOptions {
   targetScore?: number;
@@ -21,8 +22,19 @@ export const humanizeTextWithGemini = async (
     // Set defaults for options
     const {
       approach = 'standard',
-      iterationCount = 1
+      iterationCount = 1,
+      style = 'general'
     } = options || {};
+    
+    // Generate a cache key based on the text and options
+    const cacheKey = `humanize-${approach}-${iterationCount}-${style}-${previousScore || 0}-${text.substring(0, 50).replace(/\s+/g, '-')}`;
+    
+    // Check if we have a cached result
+    const cachedResult = requestCache.get<string>(cacheKey);
+    if (cachedResult !== null) {
+      console.log("Using cached humanization result");
+      return cachedResult;
+    }
     
     // Build the prompt based on user options
     const promptText = buildHumanizationPrompt(text, {
@@ -90,7 +102,12 @@ export const humanizeTextWithGemini = async (
     // Get the generated text
     if (data.candidates && data.candidates.length > 0) {
       const generatedText = data.candidates[0].content.parts[0].text;
-      return generatedText.trim();
+      const result = generatedText.trim();
+      
+      // Cache the result
+      requestCache.set(cacheKey, result);
+      
+      return result;
     }
 
     throw new Error("No response generated");

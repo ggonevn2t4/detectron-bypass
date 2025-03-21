@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +16,29 @@ interface HumanizerOutputProps {
   onDownload: (text: string, filename: string) => void;
   onOptimize: () => void;
 }
+
+// Memoized progress display component
+const ProgressDisplay = memo(({ value, message }: { value: number, message: string }) => (
+  <div className="mb-4 animate-in fade-in-50 duration-300">
+    <Progress value={value} className="h-2 bg-muted/50" />
+    <div className="flex justify-between mt-2">
+      <p className="text-xs text-muted-foreground">{message}</p>
+      <p className="text-xs font-medium">{Math.round(value)}%</p>
+    </div>
+  </div>
+));
+
+// Memoized score badge component
+const ScoreBadge = memo(({ score }: { score: number }) => (
+  <Badge variant={score >= 95 ? "success" : score >= 90 ? "default" : "secondary"} className="flex items-center gap-1 px-3 py-1.5">
+    {score >= 95 ? (
+      <CheckCircle className="h-3.5 w-3.5 mr-1" />
+    ) : (
+      <AlertCircle className="h-3.5 w-3.5 mr-1" />
+    )}
+    <span className="font-medium">{score}% Human</span>
+  </Badge>
+));
 
 const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
   outputText,
@@ -45,29 +68,10 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
     <Card className="p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-medium">Nội dung đã Humanize</h3>
-        {humanScore !== null && (
-          <Badge variant={humanScore >= 95 ? "success" : humanScore >= 90 ? "default" : "secondary"} className="flex items-center gap-1 px-3 py-1.5">
-            {humanScore >= 95 ? (
-              <CheckCircle className="h-3.5 w-3.5 mr-1" />
-            ) : (
-              <AlertCircle className="h-3.5 w-3.5 mr-1" />
-            )}
-            <span className="font-medium">{humanScore}% Human</span>
-          </Badge>
-        )}
+        {humanScore !== null && <ScoreBadge score={humanScore} />}
       </div>
       
-      {isProcessing && (
-        <div className="mb-4 animate-in fade-in-50 duration-300">
-          <Progress value={progressValue} className="h-2 bg-muted/50" />
-          <div className="flex justify-between mt-2">
-            <p className="text-xs text-muted-foreground">
-              {getProgressMessage()}
-            </p>
-            <p className="text-xs font-medium">{Math.round(progressValue)}%</p>
-          </div>
-        </div>
-      )}
+      {isProcessing && <ProgressDisplay value={progressValue} message={getProgressMessage()} />}
       
       <div className="relative group">
         <Textarea 
@@ -118,17 +122,8 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
             className="ml-auto"
             onClick={onOptimize}
           >
-            {isProcessing ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Đang tối ưu...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Tối ưu để đạt điểm cao hơn
-              </>
-            )}
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tối ưu để đạt điểm cao hơn
           </Button>
         )}
       </div>
@@ -136,4 +131,4 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
   );
 };
 
-export default HumanizerOutput;
+export default memo(HumanizerOutput);

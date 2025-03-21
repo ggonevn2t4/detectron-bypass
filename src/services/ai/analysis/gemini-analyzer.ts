@@ -2,9 +2,20 @@
 import { toast } from "@/components/ui/use-toast";
 import { API_KEY, BASE_URL, GeminiResponse } from "../common";
 import { calculateInitialAiScore } from "./score-calculator";
+import requestCache from "../cache/request-cache";
 
 export const analyzeAIScore = async (text: string): Promise<number> => {
   try {
+    // Generate a cache key based on the text content
+    const cacheKey = `analyze-score-${text.substring(0, 100).replace(/\s+/g, '-')}`;
+    
+    // Check if we have a cached result
+    const cachedResult = requestCache.get<number>(cacheKey);
+    if (cachedResult !== null) {
+      console.log("Using cached AI score analysis result");
+      return cachedResult;
+    }
+    
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
       {
@@ -50,12 +61,19 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
       const scoreMatch = generatedText.match(/\d+/);
       if (scoreMatch) {
         const score = parseInt(scoreMatch[0], 10);
-        return Math.min(Math.max(score, 0), 100); // Ensure between 0-100
+        const finalScore = Math.min(Math.max(score, 0), 100); // Ensure between 0-100
+        
+        // Cache the result
+        requestCache.set(cacheKey, finalScore);
+        
+        return finalScore;
       }
     }
 
     // If we couldn't get a proper score, use the local calculation
-    return calculateInitialAiScore(text);
+    const calculatedScore = calculateInitialAiScore(text);
+    requestCache.set(cacheKey, calculatedScore);
+    return calculatedScore;
   } catch (error) {
     console.error("Error analyzing AI score:", error);
     // Use local calculation as fallback
