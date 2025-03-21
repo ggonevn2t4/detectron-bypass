@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,9 @@ interface DetectorOutputProps {
   patterns?: string[];
   suggestions?: string[];
   isProcessing: boolean;
-  onCopy: (text: string) => void;
+  onCopy: () => void;
   onDownload: (text: string, filename: string) => void;
+  copied: boolean;
 }
 
 const DetectorOutput: React.FC<DetectorOutputProps> = ({
@@ -36,23 +37,8 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
   isProcessing,
   onCopy,
   onDownload,
+  copied
 }) => {
-  const [copied, setCopied] = useState(false);
-  
-  const handleCopy = () => {
-    const fullAnalysis = `
-AI Detection Score: ${score}%
-Confidence: ${confidence}
-Analysis: ${analysis}
-${patterns.length > 0 ? '\nDetected Patterns:\n' + patterns.map(p => `- ${p}`).join('\n') : ''}
-${suggestions.length > 0 ? '\nSuggestions:\n' + suggestions.map(s => `- ${s}`).join('\n') : ''}
-`.trim();
-
-    onCopy(fullAnalysis);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const getConfidenceColor = (confidence: string) => {
     switch (confidence) {
       case 'high':
@@ -180,7 +166,7 @@ ${suggestions.length > 0 ? '\nSuggestions:\n' + suggestions.map(s => `- ${s}`).j
               <Button
                 variant="outline"
                 className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
-                onClick={handleCopy}
+                onClick={onCopy}
               >
                 {copied ? (
                   <>
