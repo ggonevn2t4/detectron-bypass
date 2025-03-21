@@ -26,6 +26,12 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Search, CheckCircle, XCircle } from 'lucide-react';
 
+interface UserProfile {
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 interface Subscription {
   id: string;
   user_id: string;
@@ -34,11 +40,7 @@ interface Subscription {
   payment_method: string;
   current_period_end: string;
   created_at: string;
-  userProfile?: {
-    username: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  userProfile?: UserProfile;
 }
 
 const SubscriptionManagement = () => {
@@ -57,17 +59,32 @@ const SubscriptionManagement = () => {
     try {
       setLoading(true);
       
-      // Fetch subscriptions with user profiles
-      const { data, error } = await supabase
+      // Fetch all subscriptions
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
-        .select(`
-          *,
-          userProfile:profiles(username, full_name, avatar_url)
-        `);
+        .select('*');
 
-      if (error) throw error;
+      if (subscriptionsError) throw subscriptionsError;
 
-      setSubscriptions(data || []);
+      // Create an array to store the enhanced subscriptions
+      const enhancedSubscriptions: Subscription[] = [];
+
+      // For each subscription, fetch the corresponding user profile
+      for (const subscription of subscriptionsData || []) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', subscription.user_id)
+          .single();
+
+        // Add the subscription with profile data to our array
+        enhancedSubscriptions.push({
+          ...subscription,
+          userProfile: profileError ? undefined : profileData
+        });
+      }
+
+      setSubscriptions(enhancedSubscriptions);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast({
@@ -354,6 +371,47 @@ const SubscriptionManagement = () => {
       </CardContent>
     </Card>
   );
+};
+
+const getInitials = (profile: UserProfile | undefined) => {
+  if (!profile) return '?';
+  if (profile.full_name) {
+    return profile.full_name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase();
+  }
+  return profile.username ? profile.username.substring(0, 2).toUpperCase() : '?';
+};
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'active':
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+          <CheckCircle className="mr-1 h-3 w-3" /> Hoạt động
+        </Badge>
+      );
+    case 'cancelled':
+      return (
+        <Badge variant="outline" className="text-red-800">
+          <XCircle className="mr-1 h-3 w-3" /> Đã hủy
+        </Badge>
+      );
+    case 'trialing':
+      return (
+        <Badge variant="secondary">
+          Dùng thử
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline">
+          {status}
+        </Badge>
+      );
+  }
 };
 
 export default SubscriptionManagement;

@@ -20,19 +20,19 @@ export const useAdmin = () => {
 
       try {
         // Check if the user has an admin role in the subscriptions table
-        // This is a simple implementation - in a production app, you would use a dedicated roles table
         const { data, error } = await supabase
           .from('subscriptions')
           .select('plan_id')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (error) {
           console.error('Error checking admin status:', error);
           setIsAdmin(false);
         } else {
           // For now, we'll consider users with the 'admin' plan as admins
-          setIsAdmin(data?.plan_id === 'admin');
+          // Check if any subscription has the 'admin' plan
+          const adminSubscription = data?.find(sub => sub.plan_id === 'admin');
+          setIsAdmin(!!adminSubscription);
         }
       } catch (error) {
         console.error('Error in admin check:', error);
