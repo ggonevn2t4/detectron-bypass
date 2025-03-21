@@ -1,4 +1,3 @@
-
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ interface WriterActionsProps {
   setGeneratedResult: (result: AIGenerationResult | null) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   setProgressValue: React.Dispatch<React.SetStateAction<number>>;
+  generatedResult: AIGenerationResult | null;
 }
 
 export const useWriterActions = ({
@@ -30,6 +30,7 @@ export const useWriterActions = ({
   setGeneratedResult,
   setIsGenerating,
   setProgressValue,
+  generatedResult,
 }: WriterActionsProps) => {
   const { user } = useAuth();
 
@@ -168,24 +169,9 @@ export const useWriterActions = ({
       return;
     }
 
-    // Get the current generated result (we'll use a separate function to track state)
-    let currentResult: AIGenerationResult | null = null;
-    
-    // This is a synchronous operation, not a state update function
-    const getCurrentResult = () => {
-      // We'll define this function to get the current result directly from useState
-      // without using setState's functional update form
-      return currentResult;
-    };
-    
-    // Use the callback to retrieve the current result for use in the next operations
-    setGeneratedResult((prevResult) => {
-      currentResult = prevResult;
-      return prevResult; // Return unchanged to avoid re-render
-    });
-
-    // Check if we have content to save
-    if (!currentResult) {
+    // Access the generated result directly from the state
+    // instead of using setState with a callback function
+    if (!generatedResult) {
       toast({
         title: "Không có nội dung",
         description: "Không có nội dung để lưu",
@@ -200,15 +186,15 @@ export const useWriterActions = ({
         .from('content_history')
         .insert({
           user_id: user.id,
-          title: currentResult.title,
-          content: currentResult.content,
+          title: generatedResult.title,
+          content: generatedResult.content,
           topic: topic,
           length: length,
           tone: tone,
           format: format,
           audience: audience,
-          word_count: currentResult.estimatedWordCount,
-          quality_score: currentResult.qualityScore
+          word_count: generatedResult.estimatedWordCount,
+          quality_score: generatedResult.qualityScore
         });
 
       if (error) throw error;
