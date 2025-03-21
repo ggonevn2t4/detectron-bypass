@@ -19,20 +19,50 @@ export const useAdmin = () => {
       }
 
       try {
-        // Check if the user has an admin role in the subscriptions table
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('plan_id')
-          .eq('user_id', user.id);
+        // Check if user email matches the admin email
+        const adminEmail = 'admin@humanizeai.cloud'; // The admin's email
+        
+        if (user.email === adminEmail) {
+          // This user is the designated admin
+          setIsAdmin(true);
 
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
+          // Check if they already have an admin subscription
+          const { data, error } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('plan_id', 'admin')
+            .maybeSingle();
+
+          // If no admin subscription exists, create one
+          if (!data && !error) {
+            const futureDate = new Date();
+            futureDate.setFullYear(futureDate.getFullYear() + 10); // 10 years from now
+            
+            const { error: insertError } = await supabase
+              .from('subscriptions')
+              .insert({
+                user_id: user.id,
+                plan_id: 'admin',
+                status: 'active',
+                payment_method: 'manual',
+                current_period_end: futureDate.toISOString(),
+              });
+
+            if (insertError) {
+              console.error('Error creating admin subscription:', insertError);
+            }
+          }
         } else {
-          // For now, we'll consider users with the 'admin' plan as admins
-          // Check if any subscription has the 'admin' plan
-          const adminSubscription = data?.find(sub => sub.plan_id === 'admin');
-          setIsAdmin(!!adminSubscription);
+          // For non-admin emails, check if they have an admin subscription
+          const { data, error } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('plan_id', 'admin')
+            .maybeSingle();
+
+          setIsAdmin(!!data && !error);
         }
       } catch (error) {
         console.error('Error in admin check:', error);

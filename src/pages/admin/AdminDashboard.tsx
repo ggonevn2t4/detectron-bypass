@@ -1,30 +1,14 @@
 
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAdmin } from '@/hooks/useAdmin';
 import NavBar from '@/components/NavBar';
 import { Container } from '@/components/ui/container';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
 import UserManagement from './UserManagement';
 import SubscriptionManagement from './SubscriptionManagement';
 
 const AdminDashboard = () => {
-  const { isAdmin, loading } = useAdmin();
   const [activeTab, setActiveTab] = useState('users');
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
