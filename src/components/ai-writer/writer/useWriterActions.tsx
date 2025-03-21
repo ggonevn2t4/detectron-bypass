@@ -1,3 +1,4 @@
+
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -167,20 +168,31 @@ export const useWriterActions = ({
       return;
     }
 
-    // Get the current state of the generated result
-    const currentResult = await setGeneratedResult((prevResult) => {
-      if (!prevResult) {
-        toast({
-          title: "Không có nội dung",
-          description: "Không có nội dung để lưu",
-          variant: "destructive",
-        });
-        return prevResult;
-      }
-      return prevResult;
+    // Get the current generated result (we'll use a separate function to track state)
+    let currentResult: AIGenerationResult | null = null;
+    
+    // This is a synchronous operation, not a state update function
+    const getCurrentResult = () => {
+      // We'll define this function to get the current result directly from useState
+      // without using setState's functional update form
+      return currentResult;
+    };
+    
+    // Use the callback to retrieve the current result for use in the next operations
+    setGeneratedResult((prevResult) => {
+      currentResult = prevResult;
+      return prevResult; // Return unchanged to avoid re-render
     });
 
-    if (!currentResult) return;
+    // Check if we have content to save
+    if (!currentResult) {
+      toast({
+        title: "Không có nội dung",
+        description: "Không có nội dung để lưu",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Insert content into Supabase
