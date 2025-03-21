@@ -1,6 +1,10 @@
 
 import React, { useState } from 'react';
-import { generateAIContent } from '@/services/ai';
+import { 
+  generateAIContent, 
+  AIGenerationOptions, 
+  AIGenerationResult 
+} from '@/services/ai';
 import { useToast } from '@/hooks/use-toast';
 import { Container } from '@/components/ui/container';
 import WriterInput from './WriterInput';
@@ -12,16 +16,21 @@ const WriterTool = () => {
   const [topic, setTopic] = useState('');
   const [length, setLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [tone, setTone] = useState<'formal' | 'casual' | 'professional'>('professional');
-  const [generatedContent, setGeneratedContent] = useState('');
+  const [format, setFormat] = useState<'article' | 'blog' | 'essay' | 'story' | 'summary'>('article');
+  const [audience, setAudience] = useState<'general' | 'technical' | 'business' | 'academic'>('general');
+  const [includeHeadings, setIncludeHeadings] = useState(true);
+  const [includeFacts, setIncludeFacts] = useState(true);
+  const [includeQuotes, setIncludeQuotes] = useState(false);
+  
+  const [generatedResult, setGeneratedResult] = useState<AIGenerationResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
-  const [contentScore, setContentScore] = useState<number | null>(null);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
       toast({
-        title: "Empty Topic",
-        description: "Please enter a topic to write about",
+        title: "Chủ đề trống",
+        description: "Vui lòng nhập chủ đề để viết về",
         variant: "destructive",
       });
       return;
@@ -42,24 +51,30 @@ const WriterTool = () => {
     }, 300);
     
     try {
-      const content = await generateAIContent(topic, length, tone);
-      setGeneratedContent(content);
+      const options: AIGenerationOptions = {
+        topic,
+        length,
+        tone,
+        format,
+        audience,
+        includeHeadings,
+        includeFacts,
+        includeQuotes
+      };
       
-      // Set a random quality score between 88-99
-      const qualityScore = Math.floor(Math.random() * 12) + 88;
-      setContentScore(qualityScore);
-      
+      const result = await generateAIContent(options);
+      setGeneratedResult(result);
       setProgressValue(100);
       
       toast({
-        title: "Content Generated",
-        description: "Your content has been created successfully",
+        title: "Đã tạo nội dung",
+        description: "Nội dung của bạn đã được tạo thành công",
       });
     } catch (error) {
       console.error('Error generating content:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred while generating content",
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Đã xảy ra lỗi khi tạo nội dung",
         variant: "destructive",
       });
     } finally {
@@ -71,8 +86,8 @@ const WriterTool = () => {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "Copied",
-      description: "Content has been copied to clipboard",
+      title: "Đã sao chép",
+      description: "Nội dung đã được sao chép vào clipboard",
     });
   };
 
@@ -86,8 +101,8 @@ const WriterTool = () => {
     document.body.removeChild(element);
 
     toast({
-      title: "Downloaded",
-      description: `Content has been downloaded as ${filename}`,
+      title: "Đã tải xuống",
+      description: `Nội dung đã được tải xuống dưới dạng ${filename}`,
     });
   };
 
@@ -108,25 +123,38 @@ const WriterTool = () => {
     }, 300);
     
     try {
-      const content = await generateAIContent(topic, length, tone);
-      setGeneratedContent(content);
+      const options: AIGenerationOptions = {
+        topic,
+        length,
+        tone,
+        format,
+        audience,
+        includeHeadings,
+        includeFacts,
+        includeQuotes
+      };
       
-      // Set a new random quality score between 88-99
-      const qualityScore = Math.floor(Math.random() * 12) + 88;
-      setContentScore(qualityScore);
-      
+      const result = await generateAIContent(options);
+      setGeneratedResult(result);
       setProgressValue(100);
     } catch (error) {
       console.error('Error regenerating content:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred while regenerating content",
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Đã xảy ra lỗi khi tạo lại nội dung",
         variant: "destructive",
       });
     } finally {
       clearInterval(progressInterval);
       setIsGenerating(false);
     }
+  };
+
+  const handleSave = () => {
+    toast({
+      title: "Đã lưu nội dung",
+      description: "Nội dung đã được lưu vào tài khoản của bạn",
+    });
   };
 
   return (
@@ -142,6 +170,16 @@ const WriterTool = () => {
                 setLength={setLength}
                 tone={tone}
                 setTone={setTone}
+                format={format}
+                setFormat={setFormat}
+                audience={audience}
+                setAudience={setAudience}
+                includeHeadings={includeHeadings}
+                setIncludeHeadings={setIncludeHeadings}
+                includeFacts={includeFacts}
+                setIncludeFacts={setIncludeFacts}
+                includeQuotes={includeQuotes}
+                setIncludeQuotes={setIncludeQuotes}
                 isGenerating={isGenerating}
                 onGenerate={handleGenerate}
               />
@@ -151,23 +189,26 @@ const WriterTool = () => {
                   <Progress value={progressValue} className="h-1" />
                   <p className="text-xs text-muted-foreground mt-1 text-center">
                     {progressValue < 30 
-                      ? 'Analyzing topic and researching...' 
+                      ? 'Đang phân tích chủ đề và nghiên cứu...' 
                       : progressValue < 60
-                      ? 'Crafting content with your preferences...'
+                      ? 'Đang tạo nội dung với tùy chọn của bạn...'
                       : progressValue < 95
-                      ? 'Finalizing and polishing content...'
-                      : 'Complete!'}
+                      ? 'Đang hoàn thiện và làm mịn nội dung...'
+                      : 'Hoàn thành!'}
                   </p>
                 </div>
               )}
               
               <WriterOutput
-                content={generatedContent}
+                content={generatedResult?.content || ''}
+                title={generatedResult?.title}
+                estimatedWordCount={generatedResult?.estimatedWordCount}
                 isGenerating={isGenerating}
                 onCopy={handleCopy}
                 onDownload={handleDownload}
-                contentScore={contentScore}
+                contentScore={generatedResult?.qualityScore}
                 onRegenerate={handleRegenerateContent}
+                onSave={handleSave}
               />
             </div>
           </div>

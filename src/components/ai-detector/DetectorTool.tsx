@@ -6,23 +6,21 @@ import { Container } from '@/components/ui/container';
 import DetectorInput from './DetectorInput';
 import DetectorOutput from './DetectorOutput';
 import { sampleTexts } from '../humanizer/SampleTexts';
+import { AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
 
 const DetectorTool = () => {
   const { toast } = useToast();
   const [inputText, setInputText] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [analysis, setAnalysis] = useState('');
-  const [confidence, setConfidence] = useState<'high' | 'medium' | 'low'>('medium');
+  const [detectionResult, setDetectionResult] = useState<AIDetectionResult | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInputText(text);
     updateWordCount(text);
     // Reset results when input changes
-    setScore(null);
-    setAnalysis('');
+    setDetectionResult(null);
   };
 
   const updateWordCount = (text: string) => {
@@ -39,8 +37,8 @@ const DetectorTool = () => {
   const handleAnalyze = async () => {
     if (!inputText.trim()) {
       toast({
-        title: "Empty Text",
-        description: "Please enter some text to analyze",
+        title: "Văn bản trống",
+        description: "Vui lòng nhập văn bản để phân tích",
         variant: "destructive",
       });
       return;
@@ -49,14 +47,12 @@ const DetectorTool = () => {
     setIsProcessing(true);
     try {
       const result = await detectAIContent(inputText);
-      setScore(result.score);
-      setAnalysis(result.analysis);
-      setConfidence(result.confidence);
+      setDetectionResult(result);
     } catch (error) {
       console.error('Error analyzing text:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred while analyzing the text",
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Đã xảy ra lỗi khi phân tích văn bản",
         variant: "destructive",
       });
     } finally {
@@ -67,8 +63,8 @@ const DetectorTool = () => {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "Copied",
-      description: "Analysis has been copied to clipboard",
+      title: "Đã sao chép",
+      description: "Kết quả phân tích đã được sao chép vào clipboard",
     });
   };
 
@@ -82,8 +78,8 @@ const DetectorTool = () => {
     document.body.removeChild(element);
 
     toast({
-      title: "Downloaded",
-      description: `Analysis has been downloaded as ${filename}`,
+      title: "Đã tải xuống",
+      description: `Kết quả phân tích đã được tải xuống dưới dạng ${filename}`,
     });
   };
 
@@ -102,9 +98,11 @@ const DetectorTool = () => {
                 onAnalyze={handleAnalyze}
               />
               <DetectorOutput
-                score={score}
-                analysis={analysis}
-                confidence={confidence}
+                score={detectionResult?.score ?? null}
+                analysis={detectionResult?.analysis ?? ''}
+                confidence={detectionResult?.confidence ?? 'medium'}
+                patterns={detectionResult?.patterns}
+                suggestions={detectionResult?.suggestions}
                 isProcessing={isProcessing}
                 onCopy={handleCopy}
                 onDownload={handleDownload}
