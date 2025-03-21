@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { detectAIContent, AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
-import { HistoryItem } from './useDetectorState';
+import { HistoryItem, DetectionResult } from './useDetectorState';
 
 interface UseDetectorActionsProps {
   inputText: string;
@@ -64,9 +64,17 @@ export const useDetectorActions = ({
       // Save result to history
       const newHistoryItem: HistoryItem = {
         id: Date.now().toString(),
-        timestamp: new Date(),
+        text: inputText,
         inputText: inputText,
-        result: result
+        result: {
+          score: result.score,
+          confidence: result.confidence,
+          analysis: result.analysis,
+          patterns: result.patterns,
+          suggestions: result.suggestions
+        },
+        date: new Date(),
+        timestamp: new Date()
       };
       
       setHistory([newHistoryItem, ...history].slice(0, 20)); // Limit history to 20 items
@@ -109,9 +117,9 @@ export const useDetectorActions = ({
   };
 
   const handleHistoryItemClick = (item: HistoryItem, isMobile: boolean) => {
-    setInputText(item.inputText);
-    setDetectionResult(item.result);
-    updateWordCount(item.inputText);
+    setInputText(item.text);
+    setDetectionResult(item.result as AIDetectionResult);
+    updateWordCount(item.text);
     
     if (isMobile) {
       setShowHistory(false);

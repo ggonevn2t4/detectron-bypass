@@ -87,11 +87,11 @@ const DetectorHistory: React.FC<DetectorHistoryProps> = ({
                       </span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {formatTimestamp(item.timestamp)}
+                      {formatTimestamp(item.date)}
                     </span>
                   </div>
                   <p className="text-sm line-clamp-2 text-muted-foreground">
-                    {item.inputText}
+                    {item.text}
                   </p>
                 </div>
               ))}

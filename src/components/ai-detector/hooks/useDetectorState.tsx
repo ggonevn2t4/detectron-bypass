@@ -6,15 +6,17 @@ export interface DetectionResult {
   score: number;
   confidence: 'low' | 'medium' | 'high';
   analysis: string;
-  patterns?: string[];
-  suggestions?: string[];
+  patterns: string[];
+  suggestions: string[];
 }
 
 export interface HistoryItem {
   id: string;
   text: string;
+  inputText: string;
   result: DetectionResult;
   date: Date;
+  timestamp: Date;
 }
 
 export const useDetectorState = () => {
