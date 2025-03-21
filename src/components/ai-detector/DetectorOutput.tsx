@@ -33,6 +33,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import SocialSharing from './SocialSharing';
 
 interface DetectorOutputProps {
   score: number | null;
@@ -328,6 +329,16 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+              
+              {/* Add Social Sharing Component */}
+              <div className="border-t border-border/40 mt-4 pt-4">
+                <SocialSharing 
+                  title="AI Detector"
+                  score={score}
+                  onCopy={onCopy}
+                  copied={copied}
+                />
               </div>
             </div>
           </>

@@ -63,6 +63,7 @@ export const useDetectorActions = (props: UseDetectorActionsProps) => {
   // Export related actions
   const { 
     handleCopy, 
+    handleShareCopy,
     handleDownload, 
     handleExportCSV, 
     handleExportPDF, 
@@ -92,6 +93,7 @@ export const useDetectorActions = (props: UseDetectorActionsProps) => {
     handleSampleContent,
     handleAnalyze,
     handleCopy,
+    handleShareCopy,
     handleDownload,
     handleExportCSV,
     handleExportPDF,

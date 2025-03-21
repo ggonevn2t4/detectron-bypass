@@ -23,6 +23,17 @@ export const useDetectorExportActions = ({
     });
   };
 
+  const handleShareCopy = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    
+    toast({
+      title: "Đã sao chép",
+      description: "Liên kết đã được sao chép vào clipboard",
+    });
+  };
+
   const handleDownload = (text: string, filename: string) => {
     const element = document.createElement('a');
     const file = new Blob([text], { type: 'text/plain' });
@@ -80,6 +91,7 @@ export const useDetectorExportActions = ({
 
   return {
     handleCopy,
+    handleShareCopy,
     handleDownload,
     handleExportCSV,
     handleExportPDF,

@@ -41,6 +41,7 @@ const DetectorTool = () => {
     handleSampleContent,
     handleAnalyze,
     handleCopy,
+    handleShareCopy,
     handleDownload,
     handleExportCSV,
     handleExportPDF,
