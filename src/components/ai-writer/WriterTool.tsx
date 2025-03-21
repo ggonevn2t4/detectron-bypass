@@ -5,10 +5,9 @@ import WriterInput from './WriterInput';
 import WriterOutput from './WriterOutput';
 import WriterSettings from './writer/WriterSettings';
 import { useWriterState } from './writer/useWriterState';
-import { useWriterActions } from './writer/useWriterActions';
 
 const WriterTool = () => {
-  // Use the custom hooks to manage state and actions
+  // Use the custom hook to manage state and actions
   const state = useWriterState();
   
   const {
@@ -23,16 +22,12 @@ const WriterTool = () => {
     generatedResult,
     isGenerating,
     progressValue,
-    toast
+    handleGenerate,
+    handleRegenerateContent,
+    handleCopy,
+    handleDownload,
+    handleSave
   } = state;
-  
-  const actions = useWriterActions({
-    ...state,
-    setGeneratedResult: state.setGeneratedResult,
-    setIsGenerating: state.setIsGenerating,
-    setProgressValue: state.setProgressValue,
-    toast
-  });
 
   return (
     <section className="py-10 px-6 bg-background">
@@ -58,7 +53,7 @@ const WriterTool = () => {
                 includeQuotes={includeQuotes}
                 setIncludeQuotes={setIncludeQuotes}
                 isGenerating={isGenerating}
-                onGenerate={actions.handleGenerate}
+                onGenerate={handleGenerate}
               />
               
               <WriterSettings 
@@ -71,11 +66,11 @@ const WriterTool = () => {
                 title={generatedResult?.title}
                 estimatedWordCount={generatedResult?.estimatedWordCount}
                 isGenerating={isGenerating}
-                onCopy={actions.handleCopy}
-                onDownload={actions.handleDownload}
+                onCopy={handleCopy}
+                onDownload={handleDownload}
                 contentScore={generatedResult?.qualityScore}
-                onRegenerate={actions.handleRegenerateContent}
-                onSave={actions.handleSave}
+                onRegenerate={handleRegenerateContent}
+                onSave={handleSave}
               />
             </div>
           </div>
