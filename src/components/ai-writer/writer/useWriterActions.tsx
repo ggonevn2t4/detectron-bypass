@@ -13,7 +13,7 @@ interface WriterActionsProps {
   includeQuotes: boolean;
   setGeneratedResult: (result: AIGenerationResult | null) => void;
   setIsGenerating: (isGenerating: boolean) => void;
-  setProgressValue: (value: number) => void;
+  setProgressValue: React.Dispatch<React.SetStateAction<number>>;
   toast: {
     (props: ToastProps): void;
   };
@@ -49,7 +49,7 @@ export const useWriterActions = ({
     
     // Simulate progress while content is being generated
     const progressInterval = setInterval(() => {
-      setProgressValue((prev: number) => {
+      setProgressValue((prev) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
@@ -98,7 +98,7 @@ export const useWriterActions = ({
     setProgressValue(0);
     
     const progressInterval = setInterval(() => {
-      setProgressValue((prev: number) => {
+      setProgressValue((prev) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
