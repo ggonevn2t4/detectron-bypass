@@ -57,8 +57,8 @@ const HumanizerTabContent: React.FC<HumanizerTabContentProps> = ({
   setWritingStyle
 }) => {
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-6 bg-gradient-to-b from-background to-muted/20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <HumanizerInput 
           inputText={inputText}
           wordCount={wordCount}

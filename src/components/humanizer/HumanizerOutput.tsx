@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Download, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, Copy, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
 interface HumanizerOutputProps {
   outputText: string;
@@ -32,72 +34,66 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getProgressMessage = () => {
+    if (progressValue < 30) return 'Phân tích văn bản...';
+    if (progressValue < 60) return 'Áp dụng kỹ thuật humanize...';
+    if (progressValue < 95) return 'Hoàn thiện thay đổi...';
+    return 'Hoàn tất!';
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-medium">Humanized Result</h3>
+    <Card className="p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-medium">Nội dung đã Humanize</h3>
         {humanScore !== null && (
-          <div className={`flex items-center px-2 py-1 rounded-full text-xs ${
-            humanScore >= 95 
-              ? 'bg-green-500/20 text-green-600' 
-              : humanScore >= 90
-              ? 'bg-green-500/10 text-green-600'
-              : 'bg-yellow-500/10 text-yellow-600'
-          }`}>
+          <Badge variant={humanScore >= 95 ? "success" : humanScore >= 90 ? "default" : "secondary"} className="flex items-center gap-1 px-3 py-1.5">
             {humanScore >= 95 ? (
-              <>
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {humanScore}% Human
-              </>
+              <CheckCircle className="h-3.5 w-3.5 mr-1" />
             ) : (
-              <>
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {humanScore}% Human
-              </>
+              <AlertCircle className="h-3.5 w-3.5 mr-1" />
             )}
-          </div>
+            <span className="font-medium">{humanScore}% Human</span>
+          </Badge>
         )}
       </div>
       
       {isProcessing && (
-        <div className="mb-3">
-          <Progress value={progressValue} className="h-1" />
-          <p className="text-xs text-muted-foreground mt-1 text-center">
-            {progressValue < 30 
-              ? 'Analyzing text...' 
-              : progressValue < 60
-              ? 'Applying humanization...'
-              : progressValue < 95
-              ? 'Finalizing changes...'
-              : 'Complete!'}
-          </p>
+        <div className="mb-4 animate-in fade-in-50 duration-300">
+          <Progress value={progressValue} className="h-2 bg-muted/50" />
+          <div className="flex justify-between mt-2">
+            <p className="text-xs text-muted-foreground">
+              {getProgressMessage()}
+            </p>
+            <p className="text-xs font-medium">{Math.round(progressValue)}%</p>
+          </div>
         </div>
       )}
       
-      <div className="relative">
+      <div className="relative group">
         <Textarea 
-          placeholder="Your humanized content will appear here..."
-          className="min-h-[280px] resize-none p-4 text-base border-border/60 bg-muted/10"
+          placeholder="Nội dung đã humanize sẽ xuất hiện ở đây..."
+          className="min-h-[280px] resize-none p-4 text-base border-border/60 bg-muted/5 font-medium transition-all duration-300 focus:border-primary/40 focus:bg-white"
           value={outputText}
           readOnly
         />
+        
         {outputText && (
-          <div className="absolute bottom-3 right-3 flex space-x-2">
+          <div className="absolute bottom-3 right-3 flex space-x-2 bg-background/80 backdrop-blur-sm rounded p-1 opacity-90 group-hover:opacity-100 transition-opacity">
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 px-2 text-xs"
+              className="h-8 px-2.5 text-xs hover:bg-primary/10 hover:text-primary"
               onClick={handleCopy}
             >
               {copied ? (
                 <>
-                  <CheckCircle className="mr-1 h-3 w-3" />
-                  Copied
+                  <CheckCircle className="mr-1 h-3.5 w-3.5" />
+                  Đã sao chép
                 </>
               ) : (
                 <>
-                  <Copy className="mr-1 h-3 w-3" />
-                  Copy
+                  <Copy className="mr-1 h-3.5 w-3.5" />
+                  Sao chép
                 </>
               )}
             </Button>
@@ -105,28 +101,38 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
         )}
       </div>
       
-      <div className="mt-4 flex">
+      <div className="mt-5 flex items-center gap-2">
         <Button
           variant="outline"
-          className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5"
-          disabled={!outputText}
+          className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
+          disabled={!outputText || isProcessing}
           onClick={() => onDownload(outputText, 'humanized-text.txt')}
         >
           <Download className="mr-2 h-4 w-4" />
-          Export
+          Xuất văn bản
         </Button>
         
-        {outputText && (
+        {outputText && !isProcessing && (
           <Button
-            variant="ghost"
-            className="ml-auto text-muted-foreground hover:text-foreground"
+            variant="default"
+            className="ml-auto"
             onClick={onOptimize}
           >
-            Click Optimize for a higher score
+            {isProcessing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Đang tối ưu...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tối ưu để đạt điểm cao hơn
+              </>
+            )}
           </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
