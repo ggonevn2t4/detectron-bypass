@@ -23,6 +23,7 @@ export interface ProcessingDependencies {
   setOptimizationStage: (stage: number) => void;
   setOptimizationHistory: (history: any) => void;
   setIsProcessing: (isProcessing: boolean) => void;
+  setError?: (error: string | null) => void;
 }
 
 export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
@@ -44,7 +45,8 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
     setProgressValue,
     setOptimizationStage,
     setOptimizationHistory,
-    setIsProcessing
+    setIsProcessing,
+    setError
   } = deps;
 
   const handleHumanize = async () => {
@@ -57,9 +59,16 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       return;
     }
     
+    // Clear any previous errors
+    setError && setError(null);
     setIsProcessing(true);
     
     try {
+      // Validate input length
+      if (inputText.length > 100000) {
+        throw new Error("Text is too long. Please reduce the size of your input.");
+      }
+      
       const options: HumanizationOptions = {
         targetScore: humanScoreTarget,
         approach: humanizationApproach,
@@ -103,9 +112,14 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       }
     } catch (error) {
       console.error("Error in humanization process:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
+      // Set the error state if the setter is provided
+      setError && setError(errorMessage);
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -123,6 +137,8 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       return;
     }
     
+    // Clear any previous errors
+    setError && setError(null);
     setIsProcessing(true);
     
     try {
@@ -153,9 +169,14 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       });
     } catch (error) {
       console.error("Error in optimization process:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
+      // Set the error state if the setter is provided
+      setError && setError(errorMessage);
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { API_KEY, BASE_URL, GeminiResponse } from "../common";
 import { buildHumanizationPrompt } from "./prompt-builder";
 import { humanizeTextLocally } from "./local-humanizer";
@@ -19,6 +19,16 @@ export const humanizeTextWithGemini = async (
   options?: HumanizationOptions
 ): Promise<string> => {
   try {
+    // Check if API key is available
+    if (!API_KEY) {
+      throw new Error("Missing API key. Cannot perform humanization.");
+    }
+    
+    // Check text length
+    if (text.length > 100000) {
+      throw new Error("Text is too long. Please reduce the size of your input.");
+    }
+    
     // Set defaults for options
     const {
       approach = 'standard',
@@ -89,6 +99,7 @@ export const humanizeTextWithGemini = async (
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("Humanizer API error:", errorData);
       throw new Error(errorData.error?.message || "Error calling AI service");
     }
 
@@ -99,25 +110,33 @@ export const humanizeTextWithGemini = async (
       throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
     }
 
-    // Get the generated text
-    if (data.candidates && data.candidates.length > 0) {
-      const generatedText = data.candidates[0].content.parts[0].text;
-      const result = generatedText.trim();
-      
-      // Cache the result
-      requestCache.set(cacheKey, result);
-      
-      return result;
+    // Check if we have candidates
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("No response generated from the AI service");
     }
 
-    throw new Error("No response generated");
+    // Get the generated text
+    const generatedText = data.candidates[0].content.parts[0].text;
+    const result = generatedText.trim();
+    
+    // Verify we got a valid response
+    if (!result || result.length < 10) {
+      throw new Error("Generated text is too short or empty");
+    }
+    
+    // Cache the result
+    requestCache.set(cacheKey, result);
+    
+    return result;
   } catch (error) {
     console.error("Error humanizing text:", error);
-    toast({
-      title: "Error",
-      description: error instanceof Error ? error.message : "Unknown error occurred",
-      variant: "destructive",
-    });
-    return text; // Return original text on error
+    
+    // Provide a more helpful error by checking for network issues
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error("Network error. Please check your internet connection.");
+    }
+    
+    // Re-throw for handling by the caller
+    throw error;
   }
 };

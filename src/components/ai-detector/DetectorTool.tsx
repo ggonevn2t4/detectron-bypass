@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Container } from '@/components/ui/container';
 import DetectorInput from './DetectorInput';
 import DetectorOutput from './DetectorOutput';
@@ -12,9 +12,12 @@ import { formatAnalysisText } from './utils/formatUtils';
 import DetectorHistory from './DetectorHistory';
 import HistoryToggle from './HistoryToggle';
 import DetectionAnalytics from './DetectionAnalytics';
+import ErrorAlert from '@/components/ui/error-alert';
+import { Loader2 } from 'lucide-react';
 
 const DetectorTool = () => {
   const isMobile = useIsMobile();
+  const [error, setError] = useState<string | null>(null);
   
   const {
     inputText,
@@ -53,7 +56,8 @@ const DetectorTool = () => {
     history,
     setHistory,
     setShowHistory,
-    toast
+    toast,
+    setError
   });
 
   const handleSampleTextClick = (category?: string) => {
@@ -65,6 +69,9 @@ const DetectorTool = () => {
     // Get a random sample from the filtered list
     const randomIndex = Math.floor(Math.random() * filteredSamples.length);
     const selectedSample = filteredSamples[randomIndex];
+    
+    // Clear any previous errors
+    setError(null);
     
     // Use the content of the selected sample
     handleSampleText(selectedSample.content);
@@ -91,9 +98,23 @@ const DetectorTool = () => {
     }
   };
 
+  const handleRetry = () => {
+    setError(null);
+    if (inputText.trim()) {
+      handleAnalyze();
+    }
+  };
+
   return (
     <section className="py-10 px-4 sm:px-6 bg-background">
       <Container>
+        {error && (
+          <ErrorAlert 
+            message={error} 
+            retry={handleRetry} 
+          />
+        )}
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* History Sidebar */}
           {history.length > 0 && (
@@ -116,6 +137,13 @@ const DetectorTool = () => {
                   historyCount={history.length}
                   onToggleHistory={handleToggleHistory}
                 />
+              )}
+
+              {isProcessing && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                  <p className="text-sm text-muted-foreground">Đang phân tích văn bản...</p>
+                </div>
               )}
 
               <div className="p-4 sm:p-6">

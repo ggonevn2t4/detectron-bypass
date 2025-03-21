@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { API_KEY, BASE_URL, GeminiResponse } from "../common";
 
 export interface AIDetectionResult {
@@ -12,6 +12,16 @@ export interface AIDetectionResult {
 
 export const detectAIContent = async (text: string): Promise<AIDetectionResult> => {
   try {
+    // Check text length to avoid API limits
+    if (text.length > 100000) {
+      throw new Error("Văn bản quá dài. Vui lòng giảm kích thước văn bản.");
+    }
+    
+    // Check if API key is available
+    if (!API_KEY) {
+      throw new Error("Thiếu API key. Không thể phân tích văn bản.");
+    }
+
     const response = await fetch(
       `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
       {
@@ -60,64 +70,67 @@ export const detectAIContent = async (text: string): Promise<AIDetectionResult> 
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Error analyzing text");
+      console.error("API error response:", errorData);
+      throw new Error(errorData.error?.message || "Lỗi khi gọi API phân tích");
     }
 
     const data: GeminiResponse = await response.json();
 
-    if (data.candidates && data.candidates.length > 0) {
-      const analysisText = data.candidates[0].content.parts[0].text;
-      
-      try {
-        // Extract JSON from the response text
-        const jsonStartIndex = analysisText.indexOf('{');
-        const jsonEndIndex = analysisText.lastIndexOf('}') + 1;
-        const jsonString = analysisText.substring(jsonStartIndex, jsonEndIndex);
-        
-        const result = JSON.parse(jsonString) as AIDetectionResult;
-        
-        // Validate and ensure all fields exist
-        return {
-          score: Math.min(Math.max(result.score || 50, 0), 100),
-          confidence: result.confidence || "medium",
-          analysis: result.analysis || "Unable to provide detailed analysis.",
-          patterns: result.patterns || ["No specific patterns detected."],
-          suggestions: result.suggestions || ["No specific suggestions available."]
-        };
-      } catch (e) {
-        console.error("Error parsing AI detection response:", e);
-        
-        // Fallback to regex pattern matching if JSON parsing fails
-        const scoreMatch = analysisText.match(/score"?\s*:?\s*(\d+)/i);
-        const confidenceMatch = analysisText.match(/confidence"?\s*:?\s*"(high|medium|low)"/i);
-        const analysisMatch = analysisText.match(/analysis"?\s*:?\s*"([^"]+)"/i);
-        
-        return {
-          score: scoreMatch ? Math.min(Math.max(parseInt(scoreMatch[1], 10), 0), 100) : 50,
-          confidence: (confidenceMatch ? confidenceMatch[1].toLowerCase() : "medium") as "high" | "medium" | "low",
-          analysis: analysisMatch ? analysisMatch[1] : "Unable to provide detailed analysis.",
-          patterns: ["No specific patterns detected."],
-          suggestions: ["No specific suggestions available."]
-        };
-      }
+    if (data.promptFeedback?.blockReason) {
+      throw new Error(`Nội dung bị chặn: ${data.promptFeedback.blockReason}`);
     }
 
-    throw new Error("Failed to analyze the text");
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("Không nhận được phản hồi từ API");
+    }
+
+    const analysisText = data.candidates[0].content.parts[0].text;
+    
+    try {
+      // Extract JSON from the response text
+      const jsonStartIndex = analysisText.indexOf('{');
+      const jsonEndIndex = analysisText.lastIndexOf('}') + 1;
+      
+      if (jsonStartIndex === -1 || jsonEndIndex === 0) {
+        throw new Error("Không thể phân tích định dạng JSON từ phản hồi");
+      }
+      
+      const jsonString = analysisText.substring(jsonStartIndex, jsonEndIndex);
+      
+      const result = JSON.parse(jsonString) as AIDetectionResult;
+      
+      // Validate and ensure all fields exist
+      return {
+        score: Math.min(Math.max(result.score || 50, 0), 100),
+        confidence: result.confidence || "medium",
+        analysis: result.analysis || "Không thể cung cấp phân tích chi tiết.",
+        patterns: result.patterns || ["Không phát hiện mẫu cụ thể."],
+        suggestions: result.suggestions || ["Không có gợi ý cụ thể."]
+      };
+    } catch (e) {
+      console.error("Error parsing AI detection response:", e);
+      
+      // Fallback to regex pattern matching if JSON parsing fails
+      const scoreMatch = analysisText.match(/score"?\s*:?\s*(\d+)/i);
+      const confidenceMatch = analysisText.match(/confidence"?\s*:?\s*"(high|medium|low)"/i);
+      const analysisMatch = analysisText.match(/analysis"?\s*:?\s*"([^"]+)"/i);
+      
+      if (!scoreMatch) {
+        throw new Error("Không thể trích xuất điểm số từ phân tích");
+      }
+      
+      return {
+        score: scoreMatch ? Math.min(Math.max(parseInt(scoreMatch[1], 10), 0), 100) : 50,
+        confidence: (confidenceMatch ? confidenceMatch[1].toLowerCase() : "medium") as "high" | "medium" | "low",
+        analysis: analysisMatch ? analysisMatch[1] : "Không thể cung cấp phân tích chi tiết.",
+        patterns: ["Không phát hiện mẫu cụ thể."],
+        suggestions: ["Không có gợi ý cụ thể."]
+      };
+    }
   } catch (error) {
     console.error("Error running AI detection:", error);
-    toast({
-      title: "Error",
-      description: error instanceof Error ? error.message : "Unknown error occurred",
-      variant: "destructive",
-    });
     
-    // Return fallback values
-    return {
-      score: Math.floor(Math.random() * 40) + 30, // Random score between 30-70
-      confidence: "low",
-      analysis: "Unable to perform analysis due to an error. Please try again later.",
-      patterns: ["Analysis failed due to an error."],
-      suggestions: ["Try again later or use a different text sample."]
-    };
+    // Re-throw the error to be handled by the caller
+    throw error;
   }
 };

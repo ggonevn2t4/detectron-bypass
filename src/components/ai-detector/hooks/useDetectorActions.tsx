@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { detectAIContent, AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
 import { HistoryItem, DetectionResult } from './useDetectorState';
@@ -14,6 +15,7 @@ interface UseDetectorActionsProps {
   setHistory: (history: HistoryItem[]) => void;
   setShowHistory: (show: boolean) => void;
   toast: any;
+  setError?: (error: string | null) => void;
 }
 
 export const useDetectorActions = ({
@@ -25,7 +27,8 @@ export const useDetectorActions = ({
   history,
   setHistory,
   setShowHistory,
-  toast
+  toast,
+  setError
 }: UseDetectorActionsProps) => {
   const [copied, setCopied] = useState(false);
 
@@ -34,6 +37,7 @@ export const useDetectorActions = ({
     setInputText(text);
     updateWordCount(text);
     setDetectionResult(null);
+    setError && setError(null);
   };
 
   const updateWordCount = (text: string) => {
@@ -44,11 +48,13 @@ export const useDetectorActions = ({
   const handleSampleText = (sampleText: string) => {
     setInputText(sampleText);
     updateWordCount(sampleText);
+    setError && setError(null);
   };
 
   const handleSampleContent = (sample: SampleContent) => {
     setInputText(sample.content);
     updateWordCount(sample.content);
+    setError && setError(null);
     
     toast({
       title: `Mẫu "${sample.title}" đã được tải`,
@@ -66,7 +72,10 @@ export const useDetectorActions = ({
       return;
     }
 
+    // Clear previous error
+    setError && setError(null);
     setIsProcessing(true);
+    
     try {
       const result = await detectAIContent(inputText);
       setDetectionResult(result);
@@ -89,9 +98,15 @@ export const useDetectorActions = ({
       setHistory([newHistoryItem, ...history].slice(0, 20));
     } catch (error) {
       console.error('Error analyzing text:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Đã xảy ra lỗi khi phân tích văn bản";
+      
+      setError && setError(errorMessage);
+      
       toast({
         title: "Lỗi",
-        description: error instanceof Error ? error.message : "Đã xảy ra lỗi khi phân tích văn bản",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -169,6 +184,7 @@ export const useDetectorActions = ({
     setInputText(item.text);
     setDetectionResult(item.result as AIDetectionResult);
     updateWordCount(item.text);
+    setError && setError(null);
     
     if (isMobile) {
       setShowHistory(false);
