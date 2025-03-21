@@ -56,9 +56,18 @@ const DetectorTool = () => {
     toast
   });
 
-  const handleSampleTextClick = () => {
-    const randomIndex = Math.floor(Math.random() * sampleTexts.length);
-    handleSampleText(sampleTexts[randomIndex]);
+  const handleSampleTextClick = (category?: string) => {
+    // Filter by category if provided, otherwise use all samples
+    const filteredSamples = category 
+      ? sampleTexts.filter(sample => sample.category === category)
+      : sampleTexts;
+    
+    // Get a random sample from the filtered list
+    const randomIndex = Math.floor(Math.random() * filteredSamples.length);
+    const selectedSample = filteredSamples[randomIndex];
+    
+    // Use the content of the selected sample
+    handleSampleText(selectedSample.content);
   };
 
   const handleToggleHistory = () => {
@@ -120,6 +129,7 @@ const DetectorTool = () => {
                     onSampleContent={handleSampleContent}
                     onAnalyze={handleAnalyze}
                     sampleContents={sampleContents}
+                    sampleTexts={sampleTexts}
                   />
                   <DetectorOutput
                     score={detectionResult?.score ?? null}

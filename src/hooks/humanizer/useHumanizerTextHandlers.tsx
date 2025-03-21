@@ -40,21 +40,27 @@ export const useHumanizerTextHandlers = (
     setInput(e.target.value);
   }, []);
 
-  const handleSampleText = useCallback(() => {
-    // Randomly select a sample text
-    const randomIndex = Math.floor(Math.random() * sampleTexts.length);
-    const sample = sampleTexts[randomIndex];
-    setInput(sample);
+  const handleSampleText = useCallback((category?: string) => {
+    // Filter samples by category if provided
+    const eligibleSamples = category 
+      ? sampleTexts.filter(sample => sample.category === category)
+      : sampleTexts;
+    
+    // Randomly select a sample from eligible samples
+    const randomIndex = Math.floor(Math.random() * eligibleSamples.length);
+    const selectedSample = eligibleSamples[randomIndex];
+    
+    setInput(selectedSample.content);
     
     // Immediately update for better UX
-    const words = sample.trim().split(/\s+/);
-    const count = sample.trim() ? words.length : 0;
+    const words = selectedSample.content.trim().split(/\s+/);
+    const count = selectedSample.content.trim() ? words.length : 0;
     setWordCount(count);
-    setInputText(sample);
+    setInputText(selectedSample.content);
     
     toast({
       title: "Đã tải mẫu văn bản",
-      description: "Mẫu văn bản đã được tải vào trình soạn thảo",
+      description: `Mẫu văn bản "${selectedSample.title}" đã được tải vào trình soạn thảo`,
     });
   }, [setInputText, setWordCount, toast]);
 
