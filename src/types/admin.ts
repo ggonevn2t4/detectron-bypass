@@ -11,3 +11,14 @@ export interface UserProfile {
     status: string;
   } | null;
 }
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  status: string;
+  payment_method: string;
+  current_period_end: string;
+  created_at: string;
+  userProfile?: UserProfile;
+}

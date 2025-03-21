@@ -1,0 +1,129 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Subscription } from '@/types/admin';
+
+export const useSubscriptionManagement = () => {
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, []);
+
+  const fetchSubscriptions = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all subscriptions
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*');
+
+      if (subscriptionsError) throw subscriptionsError;
+
+      // Create an array to store the enhanced subscriptions
+      const enhancedSubscriptions: Subscription[] = [];
+
+      // For each subscription, fetch the corresponding user profile
+      for (const subscription of subscriptionsData || []) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', subscription.user_id)
+          .single();
+
+        // Add the subscription with profile data to our array
+        enhancedSubscriptions.push({
+          ...subscription,
+          userProfile: profileError ? undefined : profileData
+        });
+      }
+
+      setSubscriptions(enhancedSubscriptions);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải danh sách thuê bao',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const filteredSubscriptions = subscriptions.filter((sub) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      sub.plan_id.toLowerCase().includes(searchLower) ||
+      sub.status.toLowerCase().includes(searchLower) ||
+      sub.userProfile?.username?.toLowerCase().includes(searchLower) ||
+      sub.userProfile?.full_name?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveSubscription = async () => {
+    if (!selectedSubscription) return;
+    
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          plan_id: selectedSubscription.plan_id,
+          status: selectedSubscription.status,
+          payment_method: selectedSubscription.payment_method,
+          current_period_end: selectedSubscription.current_period_end,
+        })
+        .eq('id', selectedSubscription.id);
+
+      if (error) throw error;
+
+      // Update the local state
+      setSubscriptions(subscriptions.map(sub => 
+        sub.id === selectedSubscription.id ? selectedSubscription : sub
+      ));
+
+      toast({
+        title: 'Thành công',
+        description: 'Thông tin thuê bao đã được cập nhật',
+      });
+      
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể cập nhật thông tin thuê bao',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return {
+    subscriptions: filteredSubscriptions,
+    loading,
+    searchTerm,
+    isEditDialogOpen,
+    selectedSubscription,
+    handleSearch,
+    handleEditSubscription,
+    setSelectedSubscription,
+    setIsEditDialogOpen,
+    handleSaveSubscription,
+  };
+};
