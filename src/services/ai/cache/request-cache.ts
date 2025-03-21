@@ -30,10 +30,19 @@ class RequestCache {
   }
 
   public set<T>(key: CacheKey, data: T, options?: CacheOptions): void {
+    const expirationTime = options?.expirationTime || this.DEFAULT_EXPIRATION;
+    
     this.cache.set(key, {
       data,
       timestamp: Date.now()
     });
+    
+    // Automatically clean up after expiration time
+    setTimeout(() => {
+      if (this.cache.has(key)) {
+        this.cache.delete(key);
+      }
+    }, expirationTime);
   }
 
   public clear(): void {
@@ -42,6 +51,23 @@ class RequestCache {
 
   public remove(key: CacheKey): void {
     this.cache.delete(key);
+  }
+  
+  public has(key: CacheKey): boolean {
+    const item = this.cache.get(key);
+    if (!item) return false;
+    
+    const now = Date.now();
+    if (now - item.timestamp > this.DEFAULT_EXPIRATION) {
+      this.cache.delete(key);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  public getCacheSize(): number {
+    return this.cache.size;
   }
 }
 

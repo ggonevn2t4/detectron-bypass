@@ -3,9 +3,15 @@ import React, { useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Download, Copy, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, Copy, CheckCircle, AlertCircle, RefreshCw, Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface HumanizerOutputProps {
   outputText: string;
@@ -64,6 +70,28 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
     return 'Hoàn tất!';
   };
 
+  const handleShare = (platform: string) => {
+    const text = encodeURIComponent(outputText.substring(0, 280));
+    const title = encodeURIComponent('Văn bản đã humanize từ Humanizer AI');
+    
+    let url = '';
+    switch(platform) {
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?text=${text}`;
+        break;
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${text}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/shareArticle?mini=true&url=${window.location.href}&title=${title}&summary=${text}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(url, '_blank', 'width=600,height=400');
+  };
+
   return (
     <Card className="p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="flex justify-between items-center mb-3">
@@ -117,14 +145,36 @@ const HumanizerOutput: React.FC<HumanizerOutputProps> = ({
         </Button>
         
         {outputText && !isProcessing && (
-          <Button
-            variant="default"
-            className="ml-auto"
-            onClick={onOptimize}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Tối ưu để đạt điểm cao hơn
-          </Button>
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-border/60">
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Chia sẻ
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleShare('twitter')}>
+                  Twitter
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('facebook')}>
+                  Facebook
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('linkedin')}>
+                  LinkedIn
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button
+              variant="default"
+              className="ml-auto"
+              onClick={onOptimize}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Tối ưu để đạt điểm cao hơn
+            </Button>
+          </>
         )}
       </div>
     </Card>

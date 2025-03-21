@@ -26,3 +26,6 @@ export type { AIGenerationOptions, AIGenerationResult } from './generate';
 // Translation module
 export { translateText } from './translation/translate-service';
 export type { TranslationOptions, TranslationResult } from './translation/translate-service';
+
+// API module
+export { humanizeAPI, detectAPI, optimizeAPI, analyzeAPI } from './api';
