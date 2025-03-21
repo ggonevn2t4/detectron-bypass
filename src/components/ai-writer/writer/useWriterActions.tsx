@@ -1,4 +1,3 @@
-
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,43 +167,36 @@ export const useWriterActions = ({
       return;
     }
 
-    // Check if we have content to save
-    if (!setGeneratedResult || !topic.trim()) {
-      toast({
-        title: "Không có nội dung",
-        description: "Không có nội dung để lưu",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Get the current state of the generated result
+    const currentResult = await setGeneratedResult((prevResult) => {
+      if (!prevResult) {
+        toast({
+          title: "Không có nội dung",
+          description: "Không có nội dung để lưu",
+          variant: "destructive",
+        });
+        return prevResult;
+      }
+      return prevResult;
+    });
+
+    if (!currentResult) return;
 
     try {
-      // Get the current generated result
-      const result = await generateAIContent({
-        topic,
-        length,
-        tone,
-        format,
-        audience,
-        includeHeadings,
-        includeFacts,
-        includeQuotes
-      });
-
       // Insert content into Supabase
       const { error } = await supabase
         .from('content_history')
         .insert({
           user_id: user.id,
-          title: result.title,
-          content: result.content,
+          title: currentResult.title,
+          content: currentResult.content,
           topic: topic,
           length: length,
           tone: tone,
           format: format,
           audience: audience,
-          word_count: result.estimatedWordCount,
-          quality_score: result.qualityScore
+          word_count: currentResult.estimatedWordCount,
+          quality_score: currentResult.qualityScore
         });
 
       if (error) throw error;

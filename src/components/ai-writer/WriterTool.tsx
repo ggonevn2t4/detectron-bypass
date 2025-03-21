@@ -29,7 +29,9 @@ const WriterTool = () => {
     handleRegenerateContent,
     handleCopy,
     handleDownload,
-    handleSave
+    handleSave,
+    handleContentEdit,
+    handleTitleEdit
   } = state;
 
   const handleSelectHistoryContent = (item: any) => {
@@ -102,6 +104,8 @@ const WriterTool = () => {
                     contentScore={generatedResult?.qualityScore}
                     onRegenerate={handleRegenerateContent}
                     onSave={handleSave}
+                    onContentEdit={handleContentEdit}
+                    onTitleEdit={handleTitleEdit}
                   />
                 </div>
               </div>

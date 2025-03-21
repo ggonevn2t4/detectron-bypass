@@ -32,6 +32,34 @@ export const useWriterState = () => {
     setProgressValue
   });
 
+  // Handle content editing
+  const handleContentEdit = (newContent: string) => {
+    if (generatedResult) {
+      const updatedResult = {
+        ...generatedResult,
+        content: newContent,
+        // Recalculate word count
+        estimatedWordCount: newContent.trim().split(/\s+/).length
+      };
+      setGeneratedResult(updatedResult);
+      toast({
+        title: "Nội dung đã cập nhật",
+        description: "Bạn đã chỉnh sửa nội dung thành công"
+      });
+    }
+  };
+
+  // Handle title editing
+  const handleTitleEdit = (newTitle: string) => {
+    if (generatedResult) {
+      const updatedResult = {
+        ...generatedResult,
+        title: newTitle
+      };
+      setGeneratedResult(updatedResult);
+    }
+  };
+
   return {
     // Form fields
     topic, setTopic,
@@ -47,6 +75,10 @@ export const useWriterState = () => {
     generatedResult, setGeneratedResult,
     isGenerating, setIsGenerating,
     progressValue, setProgressValue,
+    
+    // Content editing
+    handleContentEdit,
+    handleTitleEdit,
     
     // Actions
     ...actions
