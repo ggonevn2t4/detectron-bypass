@@ -1,33 +1,70 @@
+// Exporting all functionality from the new modular structure
 
-// Export all functionality from their respective files
-export { isVietnameseText } from './common';
+// OpenRouter Services
+export { 
+  callOpenRouterAPI, 
+  chooseAppropriateModel,
+  OpenRouterModel
+} from './openrouter/openrouter-service';
 
-// Humanization modules
-export { humanizeTextWithGemini } from './humanization/gemini-humanizer';
-export { humanizeTextLocally } from './humanization/local-humanizer';
-export { humanizeText } from './humanization/humanize-service';
-export type { OptimizationHistoryItem } from './humanization/humanize-service';
+// Original services
+export { 
+  humanizeTextWithGemini, 
+  humanizeTextLocally 
+} from './humanization/gemini-humanizer';
 
-// Optimization modules
-export { optimizeText, runOptimizationIterations } from './optimization/optimize-service';
+// AI analysis
+export {
+  calculateInitialAiScore 
+} from './analysis/score-calculator';
 
-// Analysis modules
-export { calculateInitialAiScore } from './analysis/score-calculator';
-export { analyzeAIScore } from './analysis/gemini-analyzer';
-export { detectAIContent } from './analysis/detailed-detector';
-export type { AIDetectionResult } from './analysis/detailed-detector';
-export { analyzeText } from './analysis/text-analyzer';
-export type { TextAnalysisResult } from './analysis/text-analyzer';
+export {
+  analyzeAIScore 
+} from './analysis/text-analyzer';
 
-// Generation module 
-export { generateAIContent } from './generate';
-export type { AIGenerationOptions, AIGenerationResult } from './generate';
+export {
+  detectAIContent 
+} from './analysis/detailed-detector';
 
-// Translation module
-export { translateText } from './translation/translate-service';
-export type { TranslationOptions, TranslationResult } from './translation/translate-service';
+// New OpenRouter services
+export {
+  detectAIContentWithOpenRouter
+} from './analysis/openrouter-detector';
 
-// API module
-export { humanizeAPI, detectAPI, optimizeAPI, analyzeAPI } from './api';
-export type { ApiResponse, HumanizeResponse, DetectResponse, OptimizeResponse } from './api/types';
+export {
+  humanizeTextWithOpenRouter
+} from './humanization/openrouter-humanizer';
 
+export {
+  generateAIContentWithOpenRouter
+} from './generate-with-openrouter';
+
+export {
+  translateTextWithOpenRouter
+} from './translation/openrouter-translator';
+
+// Other utilities
+export {
+  isVietnameseText
+} from './common';
+
+// Content generation
+export {
+  generateAIContent,
+  type AIGenerationOptions,
+  type AIGenerationResult
+} from './generate';
+
+// Humanization
+export {
+  humanizeText,
+  optimizeText,
+  runOptimizationIterations
+} from './humanization/humanize-service';
+
+// Translation
+export {
+  translateText,
+  type TranslationOptions,
+  type TranslationResult
+} from './translation/translate-service';

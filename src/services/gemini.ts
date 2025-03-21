@@ -4,20 +4,32 @@
 
 import {
   humanizeTextWithGemini,
+  humanizeTextWithOpenRouter,
   humanizeTextLocally,
   calculateInitialAiScore,
   analyzeAIScore,
   detectAIContent,
+  detectAIContentWithOpenRouter,
   generateAIContent,
-  isVietnameseText
+  generateAIContentWithOpenRouter,
+  isVietnameseText,
+  translateText,
+  translateTextWithOpenRouter,
+  OpenRouterModel
 } from './ai';
 
 export {
   humanizeTextWithGemini,
+  humanizeTextWithOpenRouter,
   humanizeTextLocally,
   calculateInitialAiScore,
   analyzeAIScore,
   detectAIContent,
+  detectAIContentWithOpenRouter,
   generateAIContent,
-  isVietnameseText
+  generateAIContentWithOpenRouter,
+  isVietnameseText,
+  translateText,
+  translateTextWithOpenRouter,
+  OpenRouterModel
 };
