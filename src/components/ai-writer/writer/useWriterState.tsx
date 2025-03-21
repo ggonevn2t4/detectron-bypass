@@ -29,7 +29,8 @@ export const useWriterState = () => {
     includeQuotes,
     setGeneratedResult,
     setIsGenerating,
-    setProgressValue
+    setProgressValue,
+    generatedResult  // Add this line to pass the generatedResult parameter
   });
 
   // Handle content editing
