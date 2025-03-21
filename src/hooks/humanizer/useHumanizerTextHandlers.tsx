@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { SampleTexts } from '@/components/humanizer/SampleTexts';
+import { sampleTexts } from '@/components/humanizer/SampleTexts';
 import { useToast } from '@/hooks/use-toast';
 
 // Debounce function for input handling
@@ -42,8 +42,8 @@ export const useHumanizerTextHandlers = (
 
   const handleSampleText = useCallback(() => {
     // Randomly select a sample text
-    const randomIndex = Math.floor(Math.random() * SampleTexts.length);
-    const sample = SampleTexts[randomIndex];
+    const randomIndex = Math.floor(Math.random() * sampleTexts.length);
+    const sample = sampleTexts[randomIndex];
     setInput(sample);
     
     // Immediately update for better UX
