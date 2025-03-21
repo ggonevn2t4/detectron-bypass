@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, FileEdit, Sparkles } from 'lucide-react';
+import { Eye, FileEdit, Sparkles, Languages } from 'lucide-react';
 import { Container } from '@/components/ui/container';
 import ModeSelector from './humanizer/ModeSelector';
 import DetectorTool from './ai-detector/DetectorTool';
 import WriterTool from './ai-writer/WriterTool';
 import HumanizerTabContent from './humanizer/HumanizerTabContent';
+import TranslationTool from './translation/TranslationTool';
 import { useHumanizer } from '@/hooks/useHumanizer';
 
 const HumanizerTool = () => {
@@ -70,10 +71,17 @@ const HumanizerTool = () => {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="writer" 
-                    className="data-[state=active]:bg-background/40 data-[state=active]:shadow-none rounded-lg"
+                    className="data-[state=active]:bg-background/40 data-[state=active]:shadow-none rounded-lg mr-2"
                   >
                     <FileEdit className="mr-2 h-4 w-4" />
                     AI Writer
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="translator" 
+                    className="data-[state=active]:bg-background/40 data-[state=active]:shadow-none rounded-lg"
+                  >
+                    <Languages className="mr-2 h-4 w-4" />
+                    Dịch thuật
                   </TabsTrigger>
                 </TabsList>
                 
@@ -119,6 +127,10 @@ const HumanizerTool = () => {
             
             <TabsContent value="writer">
               <WriterTool />
+            </TabsContent>
+            
+            <TabsContent value="translator">
+              <TranslationTool />
             </TabsContent>
           </Tabs>
         </div>

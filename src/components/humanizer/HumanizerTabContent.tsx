@@ -1,7 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import HumanizerInput from './HumanizerInput';
 import HumanizerOutput from './HumanizerOutput';
+import TextComparison from './TextComparison';
+import { Button } from '@/components/ui/button';
+import { ArrowUpDown, Sliders } from 'lucide-react';
 
 interface HumanizerTabContentProps {
   inputText: string;
@@ -56,6 +59,8 @@ const HumanizerTabContent: React.FC<HumanizerTabContentProps> = ({
   setIterations,
   setWritingStyle
 }) => {
+  const [showComparison, setShowComparison] = useState(false);
+
   return (
     <div className="p-6 bg-gradient-to-b from-background to-muted/20">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -90,6 +95,40 @@ const HumanizerTabContent: React.FC<HumanizerTabContentProps> = ({
           onOptimize={onOptimize}
         />
       </div>
+      
+      {(inputText && outputText) && (
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Công cụ phân tích nâng cao</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowComparison(!showComparison)}
+              className="flex items-center"
+            >
+              {showComparison ? (
+                <>
+                  <Sliders className="mr-2 h-4 w-4" />
+                  Ẩn phân tích
+                </>
+              ) : (
+                <>
+                  <ArrowUpDown className="mr-2 h-4 w-4" />
+                  So sánh & Phân tích
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {showComparison && (
+            <TextComparison 
+              originalText={inputText}
+              humanizedText={outputText}
+              humanScore={humanScore}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

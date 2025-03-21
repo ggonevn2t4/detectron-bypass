@@ -16,7 +16,13 @@ export { calculateInitialAiScore } from './analysis/score-calculator';
 export { analyzeAIScore } from './analysis/gemini-analyzer';
 export { detectAIContent } from './analysis/detailed-detector';
 export type { AIDetectionResult } from './analysis/detailed-detector';
+export { analyzeText } from './analysis/text-analyzer';
+export type { TextAnalysisResult } from './analysis/text-analyzer';
 
 // Generation module 
 export { generateAIContent } from './generate';
 export type { AIGenerationOptions, AIGenerationResult } from './generate';
+
+// Translation module
+export { translateText } from './translation/translate-service';
+export type { TranslationOptions, TranslationResult } from './translation/translate-service';
