@@ -11,6 +11,7 @@ import { useDetectorActions } from './hooks/useDetectorActions';
 import { formatAnalysisText } from './utils/formatUtils';
 import DetectorHistory from './DetectorHistory';
 import HistoryToggle from './HistoryToggle';
+import DetectionAnalytics from './DetectionAnalytics';
 
 const DetectorTool = () => {
   const isMobile = useIsMobile();
@@ -136,6 +137,11 @@ const DetectorTool = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Analytics Dashboard */}
+            {history.length > 0 && (
+              <DetectionAnalytics history={history} />
+            )}
           </div>
         </div>
       </Container>

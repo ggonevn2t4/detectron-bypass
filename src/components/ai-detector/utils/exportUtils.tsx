@@ -105,3 +105,36 @@ export const exportAsPDF = (result: AIDetectionResult, filename: string = 'ai-de
   // Save PDF
   doc.save(filename);
 };
+
+// Export history analytics as CSV
+export const exportHistoryAsCSV = (history: any[], filename: string = 'ai-detection-history.csv') => {
+  if (!history || history.length === 0) return;
+  
+  // CSV header
+  let csv = 'Date,Text,Score,Confidence,Analysis\n';
+  
+  // Add each history item as a row
+  history.forEach(item => {
+    const date = new Date(item.date).toLocaleString('vi-VN');
+    const row = [
+      `"${date}"`,
+      `"${item.text.replace(/"/g, '""')}"`,
+      item.result.score,
+      `"${item.result.confidence}"`,
+      `"${item.result.analysis.replace(/"/g, '""')}"`
+    ].join(',');
+    
+    csv += row + '\n';
+  });
+  
+  // Create blob and download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
