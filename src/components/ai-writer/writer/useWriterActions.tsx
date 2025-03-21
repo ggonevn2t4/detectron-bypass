@@ -1,6 +1,6 @@
 
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
-import { Toast } from '@/hooks/use-toast';
+import { toast, type ToastProps } from "@/hooks/use-toast";
 
 interface WriterActionsProps {
   topic: string;
@@ -15,7 +15,7 @@ interface WriterActionsProps {
   setIsGenerating: (isGenerating: boolean) => void;
   setProgressValue: (value: number) => void;
   toast: {
-    (props: Toast): void;
+    (props: ToastProps): void;
   };
 }
 
@@ -49,7 +49,7 @@ export const useWriterActions = ({
     
     // Simulate progress while content is being generated
     const progressInterval = setInterval(() => {
-      setProgressValue(prev => {
+      setProgressValue((prev: number) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
@@ -98,7 +98,7 @@ export const useWriterActions = ({
     setProgressValue(0);
     
     const progressInterval = setInterval(() => {
-      setProgressValue(prev => {
+      setProgressValue((prev: number) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
