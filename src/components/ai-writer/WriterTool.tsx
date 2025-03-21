@@ -31,7 +31,9 @@ const WriterTool = () => {
     handleDownload,
     handleSave,
     handleContentEdit,
-    handleTitleEdit
+    handleTitleEdit,
+    handleSendToHumanizer,
+    handleSendToDetector
   } = state;
 
   const handleSelectHistoryContent = (item: any) => {
@@ -106,6 +108,8 @@ const WriterTool = () => {
                     onSave={handleSave}
                     onContentEdit={handleContentEdit}
                     onTitleEdit={handleTitleEdit}
+                    onSendToHumanizer={handleSendToHumanizer}
+                    onSendToDetector={handleSendToDetector}
                   />
                 </div>
               </div>

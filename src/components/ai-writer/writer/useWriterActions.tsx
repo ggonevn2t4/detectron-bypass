@@ -2,6 +2,7 @@ import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/se
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface WriterActionsProps {
   topic: string;
@@ -33,6 +34,7 @@ export const useWriterActions = ({
   generatedResult,
 }: WriterActionsProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -169,8 +171,7 @@ export const useWriterActions = ({
       return;
     }
 
-    // Access the generated result directly from the state
-    // instead of using setState with a callback function
+    // Check if we have generated content
     if (!generatedResult) {
       toast({
         title: "Không có nội dung",
@@ -213,11 +214,75 @@ export const useWriterActions = ({
     }
   };
 
+  const handleSendToHumanizer = () => {
+    if (!generatedResult) {
+      toast({
+        title: "Không có nội dung",
+        description: "Không có nội dung để gửi đến Humanizer",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Store content in localStorage to pass between tools
+    localStorage.setItem('humanizer_input', generatedResult.content);
+    
+    // Navigate to the humanizer tool
+    navigate('/');
+    
+    // Show notification
+    toast({
+      title: "Đã chuyển sang Humanizer",
+      description: "Nội dung đã được chuyển đến công cụ Humanizer",
+    });
+    
+    // Select the humanizer tab
+    setTimeout(() => {
+      const humanizerTab = document.querySelector('[data-value="humanizer"]') as HTMLElement;
+      if (humanizerTab) {
+        humanizerTab.click();
+      }
+    }, 100);
+  };
+
+  const handleSendToDetector = () => {
+    if (!generatedResult) {
+      toast({
+        title: "Không có nội dung",
+        description: "Không có nội dung để kiểm tra",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Store content in localStorage to pass between tools
+    localStorage.setItem('detector_input', generatedResult.content);
+    
+    // Navigate to the detector tool
+    navigate('/');
+    
+    // Show notification
+    toast({
+      title: "Đã chuyển sang AI Detector",
+      description: "Nội dung đã được chuyển đến công cụ AI Detector",
+    });
+    
+    // Select the detector tab
+    setTimeout(() => {
+      const detectorTab = document.querySelector('[data-value="detector"]') as HTMLElement;
+      if (detectorTab) {
+        detectorTab.click();
+      }
+    }, 100);
+  };
+
   return {
     handleGenerate,
     handleRegenerateContent,
     handleCopy,
     handleDownload,
-    handleSave
+    handleSave,
+    handleSendToHumanizer,
+    handleSendToDetector
   };
 };

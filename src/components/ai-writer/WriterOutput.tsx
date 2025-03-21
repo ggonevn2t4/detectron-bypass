@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Copy, Download, CheckCircle, RefreshCw, Award, 
-  AlertTriangle, Bookmark, MessageSquare, FileText, Edit
+  AlertTriangle, Bookmark, MessageSquare, FileText, Edit,
+  Wand2, Scan
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WriterOutputProps {
   content: string;
@@ -28,6 +36,8 @@ interface WriterOutputProps {
   onSave?: () => void;
   onContentEdit?: (newContent: string) => void;
   onTitleEdit?: (newTitle: string) => void;
+  onSendToHumanizer?: () => void;
+  onSendToDetector?: () => void;
 }
 
 const WriterOutput: React.FC<WriterOutputProps> = ({ 
@@ -41,7 +51,9 @@ const WriterOutput: React.FC<WriterOutputProps> = ({
   onRegenerate,
   onSave,
   onContentEdit,
-  onTitleEdit
+  onTitleEdit,
+  onSendToHumanizer,
+  onSendToDetector
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -242,7 +254,7 @@ const WriterOutput: React.FC<WriterOutputProps> = ({
             </div>
           )}
           
-          <div className="mt-5 flex items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               className="border-border/60 text-foreground hover:border-primary/40 hover:bg-primary/5 font-medium"
@@ -252,6 +264,35 @@ const WriterOutput: React.FC<WriterOutputProps> = ({
               <Download className="mr-2 h-4 w-4" />
               Xuất file
             </Button>
+            
+            {/* Integration Dropdown Menu */}
+            {(onSendToHumanizer || onSendToDetector) && content && !isGenerating && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="border-border/60">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Tích hợp
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuGroup>
+                    {onSendToHumanizer && (
+                      <DropdownMenuItem onClick={onSendToHumanizer}>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        <span>Gửi đến AI Humanizer</span>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {onSendToDetector && (
+                      <DropdownMenuItem onClick={onSendToDetector}>
+                        <Scan className="mr-2 h-4 w-4" />
+                        <span>Kiểm tra với AI Detector</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             
             {onRegenerate && content && (
               <Button

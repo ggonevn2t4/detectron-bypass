@@ -1,8 +1,10 @@
 
+import { useEffect } from 'react';
 import { useHumanizerState } from './humanizer/useHumanizerState';
 import { useHumanizerTextHandlers } from './humanizer/useHumanizerTextHandlers';
 import { useHumanizerProcessing } from './humanizer/useHumanizerProcessing';
 import { useHumanizerEffects } from './humanizer/useHumanizerEffects';
+import { toast } from '@/hooks/use-toast';
 
 export const useHumanizer = () => {
   // State management
@@ -65,6 +67,27 @@ export const useHumanizer = () => {
     setOptimizationHistory,
     setOptimizationStage
   });
+
+  // Check for input from AI Writer tool
+  useEffect(() => {
+    const writerInput = localStorage.getItem('humanizer_input');
+    if (writerInput) {
+      setInputText(writerInput);
+      
+      // Calculate word count for the input
+      const wordCountValue = writerInput.trim().split(/\s+/).length;
+      setWordCount(wordCountValue);
+      
+      // Clear the localStorage item
+      localStorage.removeItem('humanizer_input');
+      
+      // Show notification
+      toast({
+        title: "Nội dung đã nhận",
+        description: "Nội dung từ AI Writer đã được nhập vào Humanizer",
+      });
+    }
+  }, []);
 
   return {
     // State
