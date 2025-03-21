@@ -1,6 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
-import { API_KEY, BASE_URL, GeminiResponse } from "../common";
+import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
 import { buildHumanizationPrompt } from "./prompt-builder";
 import { humanizeTextLocally } from "./local-humanizer";
 import requestCache from "../cache/request-cache";
@@ -12,7 +12,7 @@ export interface HumanizationOptions {
   iterationCount?: number;
 }
 
-// Advanced humanization prompt engineering for better results
+// Advanced humanization using DeepSeek API
 export const humanizeTextWithGemini = async (
   text: string, 
   previousScore?: number, 
@@ -52,47 +52,27 @@ export const humanizeTextWithGemini = async (
       previousScore
     });
 
+    // Set temperature based on approach
+    const temperature = approach === 'ultra' ? 1.0 : approach === 'aggressive' ? 0.9 : 0.8;
+
     const response = await fetch(
-      `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+      `${BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          contents: [
+          model: "deepseek-chat",
+          messages: [
             {
-              parts: [
-                {
-                  text: promptText,
-                },
-              ],
-            },
+              role: "user",
+              content: promptText
+            }
           ],
-          generationConfig: {
-            temperature: approach === 'ultra' ? 1.0 : approach === 'aggressive' ? 0.9 : 0.8,
-            topP: approach === 'ultra' ? 0.95 : approach === 'aggressive' ? 0.9 : 0.85,
-            topK: 40,
-            maxOutputTokens: 2048,
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-          ],
+          temperature: temperature,
+          max_tokens: 2048
         }),
       }
     );
@@ -103,20 +83,15 @@ export const humanizeTextWithGemini = async (
       throw new Error(errorData.error?.message || "Error calling AI service");
     }
 
-    const data: GeminiResponse = await response.json();
+    const data: DeepSeekResponse = await response.json();
 
-    // Check for safety blocks
-    if (data.promptFeedback?.blockReason) {
-      throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
-    }
-
-    // Check if we have candidates
-    if (!data.candidates || data.candidates.length === 0) {
+    // Check if we have choices
+    if (!data.choices || data.choices.length === 0) {
       throw new Error("No response generated from the AI service");
     }
 
     // Get the generated text
-    const generatedText = data.candidates[0].content.parts[0].text;
+    const generatedText = data.choices[0].message.content;
     const result = generatedText.trim();
     
     // Verify we got a valid response

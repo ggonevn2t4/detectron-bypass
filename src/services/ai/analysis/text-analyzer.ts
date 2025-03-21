@@ -1,5 +1,5 @@
 
-import { API_KEY, BASE_URL, GeminiResponse } from "../common";
+import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
 import { toast } from "@/hooks/use-toast";
 
 export interface TextAnalysisResult {
@@ -31,61 +31,56 @@ export interface TextAnalysisResult {
 export const analyzeText = async (text: string): Promise<TextAnalysisResult> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+      `${BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          contents: [
+          model: "deepseek-chat",
+          messages: [
             {
-              parts: [
-                {
-                  text: `Phân tích chi tiết đoạn văn bản sau và trả về đánh giá về độ đọc, độ phức tạp, và tính nhất quán.
-                  
-                  Trả về phản hồi của bạn theo định dạng JSON dưới đây không có bất kỳ văn bản bổ sung nào:
-                  {
-                    "readability": {
-                      "score": [số từ 0-100 với 100 là rất dễ đọc],
-                      "grade": [cấp độ đọc, ví dụ: "Tiểu học", "Trung học", "Đại học"],
-                      "averageSentenceLength": [độ dài câu trung bình theo số từ],
-                      "complexWords": [số từ phức tạp]
-                    },
-                    "complexity": {
-                      "score": [số từ 0-100 với 100 là rất phức tạp],
-                      "vocabularyRichness": [số từ 0-100 đánh giá sự đa dạng từ vựng],
-                      "technicalTerms": [số thuật ngữ kỹ thuật],
-                      "advancedStructures": [số cấu trúc ngữ pháp nâng cao]
-                    },
-                    "consistency": {
-                      "score": [số từ 0-100 với 100 là hoàn toàn nhất quán],
-                      "toneShifts": [số lần chuyển đổi giọng điệu],
-                      "styleBreaks": [số lần thay đổi phong cách],
-                      "themeCoherence": [số từ 0-100 đánh giá sự gắn kết chủ đề]
-                    },
-                    "summary": [tóm tắt ngắn 1-2 câu về văn bản],
-                    "suggestions": [mảng 2-3 gợi ý để cải thiện văn bản]
-                  }
-                  
-                  Hãy đánh giá kỹ lưỡng, xem xét:
-                  - Cấu trúc câu và đoạn văn
-                  - Độ phức tạp của từ vựng
-                  - Sự nhất quán về giọng điệu và phong cách
-                  - Tính mạch lạc của chủ đề
-                  - Sự rõ ràng và dễ hiểu
-                  
-                  Văn bản cần phân tích: "${text}"`,
+              role: "user",
+              content: `Phân tích chi tiết đoạn văn bản sau và trả về đánh giá về độ đọc, độ phức tạp, và tính nhất quán.
+              
+              Trả về phản hồi của bạn theo định dạng JSON dưới đây không có bất kỳ văn bản bổ sung nào:
+              {
+                "readability": {
+                  "score": [số từ 0-100 với 100 là rất dễ đọc],
+                  "grade": [cấp độ đọc, ví dụ: "Tiểu học", "Trung học", "Đại học"],
+                  "averageSentenceLength": [độ dài câu trung bình theo số từ],
+                  "complexWords": [số từ phức tạp]
                 },
-              ],
-            },
+                "complexity": {
+                  "score": [số từ 0-100 với 100 là rất phức tạp],
+                  "vocabularyRichness": [số từ 0-100 đánh giá sự đa dạng từ vựng],
+                  "technicalTerms": [số thuật ngữ kỹ thuật],
+                  "advancedStructures": [số cấu trúc ngữ pháp nâng cao]
+                },
+                "consistency": {
+                  "score": [số từ 0-100 với 100 là hoàn toàn nhất quán],
+                  "toneShifts": [số lần chuyển đổi giọng điệu],
+                  "styleBreaks": [số lần thay đổi phong cách],
+                  "themeCoherence": [số từ 0-100 đánh giá sự gắn kết chủ đề]
+                },
+                "summary": [tóm tắt ngắn 1-2 câu về văn bản],
+                "suggestions": [mảng 2-3 gợi ý để cải thiện văn bản]
+              }
+              
+              Hãy đánh giá kỹ lưỡng, xem xét:
+              - Cấu trúc câu và đoạn văn
+              - Độ phức tạp của từ vựng
+              - Sự nhất quán về giọng điệu và phong cách
+              - Tính mạch lạc của chủ đề
+              - Sự rõ ràng và dễ hiểu
+              
+              Văn bản cần phân tích: "${text}"`
+            }
           ],
-          generationConfig: {
-            temperature: 0.2,
-            topP: 0.9,
-            topK: 40,
-            maxOutputTokens: 1024,
-          },
+          temperature: 0.2,
+          max_tokens: 1024
         }),
       }
     );
@@ -95,10 +90,10 @@ export const analyzeText = async (text: string): Promise<TextAnalysisResult> => 
       throw new Error(errorData.error?.message || "Lỗi khi phân tích văn bản");
     }
 
-    const data: GeminiResponse = await response.json();
+    const data: DeepSeekResponse = await response.json();
 
-    if (data.candidates && data.candidates.length > 0) {
-      const analysisText = data.candidates[0].content.parts[0].text;
+    if (data.choices && data.choices.length > 0) {
+      const analysisText = data.choices[0].message.content;
       
       try {
         // Trích xuất JSON từ phản hồi

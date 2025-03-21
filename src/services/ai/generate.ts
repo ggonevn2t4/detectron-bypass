@@ -1,6 +1,6 @@
 
 import { toast } from "@/components/ui/use-toast";
-import { API_KEY, BASE_URL, GeminiResponse } from "./common";
+import { API_KEY, BASE_URL, DeepSeekResponse } from "./common";
 
 export interface AIGenerationOptions {
   topic: string;
@@ -47,56 +47,33 @@ export const generateAIContent = async (
     const wordCount = length === "short" ? "250-350" : length === "medium" ? "500-700" : "900-1500";
     
     const response = await fetch(
-      `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+      `${BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          contents: [
+          model: "deepseek-chat",
+          messages: [
             {
-              parts: [
-                {
-                  text: `Write a ${format} about "${topic}".
-                  Make it approximately ${wordCount} words long.
-                  Use a ${tone} tone suitable for a ${audience} audience.
-                  ${includeHeadings ? "Include clear headings and subheadings." : "Use a flowing narrative style without headings."}
-                  ${includeFacts ? "Include relevant facts and statistics where appropriate." : "Focus on opinions and perspectives rather than facts."}
-                  ${includeQuotes ? "Include some relevant quotes or testimonials." : "Don't include any quotes."}
-                  Start with a compelling title for the ${format}.
-                  Make the content informative, well-structured with paragraphs, and engaging.
-                  
-                  First line of your response must be the title in the format: "TITLE: [Your title here]"
-                  The rest of your response should be just the content without any additional explanations.`,
-                },
-              ],
-            },
+              role: "user",
+              content: `Write a ${format} about "${topic}".
+              Make it approximately ${wordCount} words long.
+              Use a ${tone} tone suitable for a ${audience} audience.
+              ${includeHeadings ? "Include clear headings and subheadings." : "Use a flowing narrative style without headings."}
+              ${includeFacts ? "Include relevant facts and statistics where appropriate." : "Focus on opinions and perspectives rather than facts."}
+              ${includeQuotes ? "Include some relevant quotes or testimonials." : "Don't include any quotes."}
+              Start with a compelling title for the ${format}.
+              Make the content informative, well-structured with paragraphs, and engaging.
+              
+              First line of your response must be the title in the format: "TITLE: [Your title here]"
+              The rest of your response should be just the content without any additional explanations.`
+            }
           ],
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 4096,
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE",
-            },
-          ],
+          temperature: 0.7,
+          max_tokens: 4096
         }),
       }
     );
@@ -106,16 +83,11 @@ export const generateAIContent = async (
       throw new Error(errorData.error?.message || "Error generating content");
     }
 
-    const data: GeminiResponse = await response.json();
-
-    // Check for safety blocks
-    if (data.promptFeedback?.blockReason) {
-      throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
-    }
+    const data: DeepSeekResponse = await response.json();
 
     // Get the generated text
-    if (data.candidates && data.candidates.length > 0) {
-      const generatedText = data.candidates[0].content.parts[0].text;
+    if (data.choices && data.choices.length > 0) {
+      const generatedText = data.choices[0].message.content;
       
       // Extract title and content
       const titleMatch = generatedText.match(/TITLE:\s*(.+?)(?:\n|$)/);

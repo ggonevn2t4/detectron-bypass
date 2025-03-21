@@ -1,21 +1,23 @@
 
 import { toast } from "@/components/ui/use-toast";
 
-// API key is typically stored in environment variables, but for quick demo we're using it directly
-export const API_KEY = "AIzaSyCAUUzlCkSxc8cTBWQdVGCvOxIQGSEnsIE";
-export const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+// API key for DeepSeek
+export const API_KEY = "sk-cd308e06aeef4cb999efa5c3d59b0376";
+export const BASE_URL = "https://api.deepseek.com/v1";
 
-export interface GeminiResponse {
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
+export interface DeepSeekResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: {
+    index: number;
+    message: {
+      role: string;
+      content: string;
     };
+    finish_reason: string;
   }[];
-  promptFeedback?: {
-    blockReason?: string;
-  };
 }
 
 // Function to detect if text is Vietnamese

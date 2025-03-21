@@ -1,6 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
-import { API_KEY, BASE_URL, GeminiResponse } from "../common";
+import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
 
 export interface AIDetectionResult {
   score: number;
@@ -23,47 +23,42 @@ export const detectAIContent = async (text: string): Promise<AIDetectionResult> 
     }
 
     const response = await fetch(
-      `${BASE_URL}/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+      `${BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          contents: [
+          model: "deepseek-chat",
+          messages: [
             {
-              parts: [
-                {
-                  text: `Analyze the following text to determine if it was written by AI or a human.
-                  
-                  Return your response in the following JSON format without any additional text:
-                  {
-                    "score": [numeric score from 0-100 where 100 means definitely AI-generated],
-                    "confidence": ["high", "medium", or "low"],
-                    "analysis": [2-3 sentence explanation of why you think the text is AI-generated or human-written],
-                    "patterns": [array of 3-5 specific patterns found that indicate AI or human writing],
-                    "suggestions": [array of 2-3 tips to make the text more human-like if it appears to be AI-generated]
-                  }
-                  
-                  Be extremely thorough in your analysis. Look for subtle patterns like:
-                  - Consistent sentence structures
-                  - Lack of personal anecdotes or genuine opinions
-                  - Excessive formality or perfectly balanced arguments
-                  - Unnaturally consistent tone throughout
-                  - Absence of contractions, slang, or idioms
-                  - Repetitive transition phrases
-                  
-                  Text to analyze: "${text}"`,
-                },
-              ],
-            },
+              role: "user",
+              content: `Analyze the following text to determine if it was written by AI or a human.
+              
+              Return your response in the following JSON format without any additional text:
+              {
+                "score": [numeric score from 0-100 where 100 means definitely AI-generated],
+                "confidence": ["high", "medium", or "low"],
+                "analysis": [2-3 sentence explanation of why you think the text is AI-generated or human-written],
+                "patterns": [array of 3-5 specific patterns found that indicate AI or human writing],
+                "suggestions": [array of 2-3 tips to make the text more human-like if it appears to be AI-generated]
+              }
+              
+              Be extremely thorough in your analysis. Look for subtle patterns like:
+              - Consistent sentence structures
+              - Lack of personal anecdotes or genuine opinions
+              - Excessive formality or perfectly balanced arguments
+              - Unnaturally consistent tone throughout
+              - Absence of contractions, slang, or idioms
+              - Repetitive transition phrases
+              
+              Text to analyze: "${text}"`
+            }
           ],
-          generationConfig: {
-            temperature: 0.2,
-            topP: 0.9,
-            topK: 40,
-            maxOutputTokens: 1024,
-          },
+          temperature: 0.2,
+          max_tokens: 1024
         }),
       }
     );
@@ -74,17 +69,13 @@ export const detectAIContent = async (text: string): Promise<AIDetectionResult> 
       throw new Error(errorData.error?.message || "Lỗi khi gọi API phân tích");
     }
 
-    const data: GeminiResponse = await response.json();
+    const data: DeepSeekResponse = await response.json();
 
-    if (data.promptFeedback?.blockReason) {
-      throw new Error(`Nội dung bị chặn: ${data.promptFeedback.blockReason}`);
-    }
-
-    if (!data.candidates || data.candidates.length === 0) {
+    if (!data.choices || data.choices.length === 0) {
       throw new Error("Không nhận được phản hồi từ API");
     }
 
-    const analysisText = data.candidates[0].content.parts[0].text;
+    const analysisText = data.choices[0].message.content;
     
     try {
       // Extract JSON from the response text
