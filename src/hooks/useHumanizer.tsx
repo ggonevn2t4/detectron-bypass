@@ -5,7 +5,7 @@ import {
   humanizeText, optimizeText, runOptimizationIterations, 
   OptimizationHistoryItem, 
 } from '@/services/ai';
-import { HumanizationOptions } from '@/components/humanizer/HumanizationEngine';
+import { HumanizationOptions } from '@/services/ai/humanization/gemini-humanizer';
 import { sampleTexts } from '@/components/humanizer/SampleTexts';
 
 export const useHumanizer = () => {
