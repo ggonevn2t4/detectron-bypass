@@ -69,7 +69,8 @@ export const useUserManagement = () => {
     return (
       user.email?.toLowerCase().includes(searchLower) ||
       user.username?.toLowerCase().includes(searchLower) ||
-      user.full_name?.toLowerCase().includes(searchLower)
+      user.full_name?.toLowerCase().includes(searchLower) ||
+      (user.subscription?.plan_id || '').toLowerCase().includes(searchLower)
     );
   });
 
@@ -114,17 +115,55 @@ export const useUserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      // Delete user's subscriptions first (due to potential foreign key constraint)
+      const { error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (subscriptionError) throw subscriptionError;
+      
+      // Then delete the user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+        
+      if (profileError) throw profileError;
+      
+      // Note: In a real application with authentication, you would also need to delete the user from auth.users
+      // through an admin API or Supabase Edge Function with admin privileges
+      
+      // Update local state by removing the deleted user
+      setUsers(users.filter(user => user.id !== userId));
+      
+      toast({
+        title: 'Thành công',
+        description: 'Người dùng đã được xóa thành công',
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xóa người dùng',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     users: filteredUsers,
     loading,
     searchTerm,
     isEditDialogOpen,
     selectedUser,
-    setSearchTerm,
     handleSearch,
     handleEditUser,
     setSelectedUser,
     setIsEditDialogOpen,
     handleSaveUser,
+    handleDeleteUser,
   };
 };

@@ -24,10 +24,11 @@ const SubscriptionManagement = () => {
     setSelectedSubscription,
     setIsEditDialogOpen,
     handleSaveSubscription,
+    handleDeleteSubscription,
   } = useSubscriptionManagement();
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Quản lý thuê bao</CardTitle>
         <CardDescription>Xem và quản lý thuê bao của người dùng</CardDescription>
@@ -40,7 +41,8 @@ const SubscriptionManagement = () => {
         <SubscriptionTable 
           subscriptions={subscriptions} 
           loading={loading} 
-          onEditSubscription={handleEditSubscription} 
+          onEditSubscription={handleEditSubscription}
+          onDeleteSubscription={handleDeleteSubscription}
         />
 
         <SubscriptionEditDialog 

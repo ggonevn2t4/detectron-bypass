@@ -84,7 +84,8 @@ export const useSubscriptionManagement = () => {
       sub.plan_id.toLowerCase().includes(searchLower) ||
       sub.status.toLowerCase().includes(searchLower) ||
       sub.userProfile?.username?.toLowerCase().includes(searchLower) ||
-      sub.userProfile?.full_name?.toLowerCase().includes(searchLower)
+      sub.userProfile?.full_name?.toLowerCase().includes(searchLower) ||
+      sub.payment_method.toLowerCase().includes(searchLower)
     );
   });
 
@@ -130,6 +131,32 @@ export const useSubscriptionManagement = () => {
     }
   };
 
+  const handleDeleteSubscription = async (subscriptionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .delete()
+        .eq('id', subscriptionId);
+        
+      if (error) throw error;
+      
+      // Update local state by removing the deleted subscription
+      setSubscriptions(subscriptions.filter(sub => sub.id !== subscriptionId));
+      
+      toast({
+        title: 'Thành công',
+        description: 'Thuê bao đã được xóa thành công',
+      });
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xóa thuê bao',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     subscriptions: filteredSubscriptions,
     loading,
@@ -141,5 +168,6 @@ export const useSubscriptionManagement = () => {
     setSelectedSubscription,
     setIsEditDialogOpen,
     handleSaveSubscription,
+    handleDeleteSubscription,
   };
 };

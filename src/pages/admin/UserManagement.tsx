@@ -24,10 +24,11 @@ const UserManagement = () => {
     setSelectedUser,
     setIsEditDialogOpen,
     handleSaveUser,
+    handleDeleteUser,
   } = useUserManagement();
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Quản lý người dùng</CardTitle>
         <CardDescription>Xem và quản lý tài khoản người dùng trong hệ thống</CardDescription>
@@ -41,6 +42,7 @@ const UserManagement = () => {
           users={users} 
           loading={loading} 
           onEditUser={handleEditUser} 
+          onDeleteUser={handleDeleteUser}
         />
 
         <UserEditDialog 
