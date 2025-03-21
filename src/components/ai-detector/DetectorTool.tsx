@@ -11,7 +11,6 @@ import { useDetectorActions } from './hooks/useDetectorActions';
 import { formatAnalysisText } from './utils/formatUtils';
 import DetectorHistory from './DetectorHistory';
 import HistoryToggle from './HistoryToggle';
-import DarkModeToggle from './DarkModeToggle';
 
 const DetectorTool = () => {
   const isMobile = useIsMobile();
@@ -81,14 +80,9 @@ const DetectorTool = () => {
   };
 
   return (
-    <section className="py-8 px-4 sm:py-10 sm:px-6 bg-background transition-colors duration-300">
+    <section className="py-10 px-4 sm:px-6 bg-background">
       <Container>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">AI Detector</h2>
-          <DarkModeToggle />
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* History Sidebar */}
           {history.length > 0 && (
             <DetectorHistory
@@ -103,7 +97,7 @@ const DetectorTool = () => {
 
           {/* Main Content */}
           <div className={`${isMobile || !history.length ? 'col-span-1 lg:col-span-3' : 'col-span-1 lg:col-span-2'}`}>
-            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden transition-colors duration-300">
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
               {/* Mobile History Toggle */}
               {isMobile && history.length > 0 && !showHistory && (
                 <HistoryToggle
