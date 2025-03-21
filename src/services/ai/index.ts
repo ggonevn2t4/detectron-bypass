@@ -29,3 +29,5 @@ export type { TranslationOptions, TranslationResult } from './translation/transl
 
 // API module
 export { humanizeAPI, detectAPI, optimizeAPI, analyzeAPI } from './api';
+export type { ApiResponse, HumanizeResponse, DetectResponse, OptimizeResponse } from './api/types';
+
