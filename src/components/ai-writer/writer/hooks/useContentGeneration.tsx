@@ -79,8 +79,7 @@ export const useContentGeneration = ({
         audience,
         includeHeadings,
         includeFacts,
-        includeQuotes,
-        topic
+        includeQuotes
       };
       
       const result = await generateAIContent(topic, options);
@@ -145,8 +144,7 @@ export const useContentGeneration = ({
         audience,
         includeHeadings,
         includeFacts,
-        includeQuotes,
-        topic
+        includeQuotes
       };
       
       const result = await generateAIContent(topic, options);

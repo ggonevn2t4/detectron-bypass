@@ -33,6 +33,6 @@ export const generateAIContent = async (
     title: "Generated Title",
     estimatedWordCount: 500,
     qualityScore: 85,
-    options: options
+    options: {...options, topic}
   };
 };

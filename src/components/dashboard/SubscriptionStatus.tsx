@@ -9,7 +9,6 @@ interface SubscriptionStatusProps {
 }
 
 export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ loading }) => {
-  // Component implementation remains the same
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -30,7 +29,6 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ loading 
           </div>
         ) : (
           <div>
-            {/* Subscription content goes here */}
             <p>Free Plan</p>
           </div>
         )}

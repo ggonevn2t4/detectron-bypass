@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 export interface UserLimits {
   plan: string;
@@ -42,19 +43,22 @@ export const useUserLimits = () => {
       if (error) throw error;
       
       if (data && typeof data === 'object') {
+        // Properly type and access the JSON data
+        const jsonData = data as Record<string, Json>;
+        
         // Convert to proper object type to handle JSON response from Supabase
         const limitsData: UserLimits = {
-          plan: String(data.plan || 'free'),
-          planName: String(data.plan_name || 'Free'),
-          humanizationLimit: typeof data.humanization_limit === 'number' ? data.humanization_limit : null,
-          isHumanizationUnlimited: Boolean(data.is_humanization_unlimited),
-          humanizationWordsUsed: Number(data.humanization_words_used || 0),
-          contentGenerationLimit: Number(data.content_generation_limit || 0),
-          contentGenerationsUsed: Number(data.content_generations_used || 0),
-          maxWordsPerProcess: Number(data.max_words_per_process || 1000),
-          detectionLevel: String(data.detection_level || 'basic'),
-          hasReachedHumanizationLimit: Boolean(data.has_reached_humanization_limit),
-          hasReachedContentGenerationLimit: Boolean(data.has_reached_content_generation_limit)
+          plan: String(jsonData.plan || 'free'),
+          planName: String(jsonData.plan_name || 'Free'),
+          humanizationLimit: typeof jsonData.humanization_limit === 'number' ? jsonData.humanization_limit : null,
+          isHumanizationUnlimited: Boolean(jsonData.is_humanization_unlimited),
+          humanizationWordsUsed: Number(jsonData.humanization_words_used || 0),
+          contentGenerationLimit: Number(jsonData.content_generation_limit || 0),
+          contentGenerationsUsed: Number(jsonData.content_generations_used || 0),
+          maxWordsPerProcess: Number(jsonData.max_words_per_process || 1000),
+          detectionLevel: String(jsonData.detection_level || 'basic'),
+          hasReachedHumanizationLimit: Boolean(jsonData.has_reached_humanization_limit),
+          hasReachedContentGenerationLimit: Boolean(jsonData.has_reached_content_generation_limit)
         };
         
         setLimits(limitsData);

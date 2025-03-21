@@ -1,3 +1,4 @@
+
 // Exporting all functionality from the new modular structure
 
 // OpenRouter Services
@@ -8,10 +9,13 @@ export {
 } from './openrouter/openrouter-service';
 
 // Original services
+export type { 
+  HumanizationOptions
+} from './humanization/gemini-humanizer';
+
 export { 
   humanizeTextWithGemini, 
   humanizeTextLocally,
-  type HumanizationOptions
 } from './humanization/gemini-humanizer';
 
 // AI analysis
@@ -19,9 +23,12 @@ export {
   calculateInitialAiScore 
 } from './analysis/score-calculator';
 
+export type {
+  TextAnalysisResult
+} from './analysis/text-analyzer';
+
 export {
   analyzeText,
-  type TextAnalysisResult
 } from './analysis/text-analyzer';
 
 export {
@@ -57,16 +64,22 @@ export {
 } from './common';
 
 // Content generation
+export type {
+  AIGenerationOptions,
+  AIGenerationResult
+} from './generate';
+
 export {
   generateAIContent,
-  type AIGenerationOptions,
-  type AIGenerationResult
 } from './generate';
 
 // Humanization
+export type {
+  OptimizationHistoryItem
+} from './humanization/humanize-service';
+
 export {
   humanizeText,
-  type OptimizationHistoryItem
 } from './humanization/humanize-service';
 
 // Add missing optimization functions
@@ -141,8 +154,11 @@ export const runOptimizationIterations = async (
 };
 
 // Translation
+export type {
+  TranslationOptions,
+  TranslationResult
+} from './translation/translate-service';
+
 export {
   translateText,
-  type TranslationOptions,
-  type TranslationResult
 } from './translation/translate-service';
