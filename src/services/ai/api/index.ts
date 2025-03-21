@@ -13,6 +13,23 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+// Define the return types for each API function
+interface HumanizeResponse {
+  humanizedText: string;
+  humanScore: number;
+}
+
+interface DetectResponse {
+  isAI: boolean;
+  aiScore: number;
+  details: any;
+}
+
+interface OptimizeResponse {
+  optimizedText: string;
+  newScore: number;
+}
+
 // API functionality for humanization
 export const humanizeAPI = async (
   text: string,
@@ -21,11 +38,11 @@ export const humanizeAPI = async (
     approach: 'standard',
     style: 'academic'
   }
-): Promise<ApiResponse<{ humanizedText: string; humanScore: number }>> => {
+): Promise<ApiResponse<HumanizeResponse>> => {
   try {
     // Generate cache key based on input and options
     const cacheKey = `humanize:${text}:${JSON.stringify(options)}`;
-    const cachedResult = requestCache.get(cacheKey);
+    const cachedResult = requestCache.get<HumanizeResponse>(cacheKey);
     
     if (cachedResult) {
       console.log('Using cached humanization result');
@@ -50,7 +67,7 @@ export const humanizeAPI = async (
       mockSetFunction
     );
     
-    const response = {
+    const response: HumanizeResponse = {
       humanizedText: result.humanized,
       humanScore: result.score
     };
@@ -74,11 +91,11 @@ export const humanizeAPI = async (
 // API functionality for AI detection
 export const detectAPI = async (
   text: string
-): Promise<ApiResponse<{ isAI: boolean; aiScore: number; details: any }>> => {
+): Promise<ApiResponse<DetectResponse>> => {
   try {
     // Generate cache key
     const cacheKey = `detect:${text}`;
-    const cachedResult = requestCache.get(cacheKey);
+    const cachedResult = requestCache.get<DetectResponse>(cacheKey);
     
     if (cachedResult) {
       console.log('Using cached detection result');
@@ -90,9 +107,9 @@ export const detectAPI = async (
     
     const result = await detectAIContent(text);
     
-    const response = {
-      isAI: result.aiProbability > 0.7,
-      aiScore: Math.round(result.aiProbability * 100),
+    const response: DetectResponse = {
+      isAI: result.score > 70, // If score > 70, likely AI
+      aiScore: result.score,
       details: result
     };
     
@@ -121,11 +138,11 @@ export const optimizeAPI = async (
     approach: 'standard',
     style: 'academic'
   }
-): Promise<ApiResponse<{ optimizedText: string; newScore: number }>> => {
+): Promise<ApiResponse<OptimizeResponse>> => {
   try {
     // Generate cache key
     const cacheKey = `optimize:${text}:${currentScore}:${JSON.stringify(options)}`;
-    const cachedResult = requestCache.get(cacheKey);
+    const cachedResult = requestCache.get<OptimizeResponse>(cacheKey);
     
     if (cachedResult) {
       console.log('Using cached optimization result');
@@ -150,8 +167,8 @@ export const optimizeAPI = async (
       mockSetFunction
     );
     
-    const response = {
-      optimizedText: result.text,
+    const response: OptimizeResponse = {
+      optimizedText: result.optimized,
       newScore: result.score
     };
     
