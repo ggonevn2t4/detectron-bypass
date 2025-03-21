@@ -5,6 +5,10 @@ export { isVietnameseText } from './common';
 // Humanization modules
 export { humanizeTextWithGemini } from './humanization/gemini-humanizer';
 export { humanizeTextLocally } from './humanization/local-humanizer';
+export { humanizeText, OptimizationHistoryItem } from './humanization/humanize-service';
+
+// Optimization modules
+export { optimizeText, runOptimizationIterations } from './optimization/optimize-service';
 
 // Analysis modules
 export { calculateInitialAiScore } from './analysis/score-calculator';

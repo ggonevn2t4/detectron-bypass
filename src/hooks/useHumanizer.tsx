@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { humanizeText, optimizeText, runOptimizationIterations, HumanizationOptions } from '@/components/humanizer/HumanizationEngine';
+import { 
+  humanizeText, optimizeText, runOptimizationIterations, 
+  OptimizationHistoryItem, 
+} from '@/services/ai';
+import { HumanizationOptions } from '@/components/humanizer/HumanizationEngine';
 import { sampleTexts } from '@/components/humanizer/SampleTexts';
-
-interface OptimizationHistoryItem {
-  score: number;
-  text: string;
-}
 
 export const useHumanizer = () => {
   const { toast } = useToast();
