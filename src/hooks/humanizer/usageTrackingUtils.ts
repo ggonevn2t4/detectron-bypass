@@ -7,11 +7,11 @@ import { toast } from '@/hooks/use-toast';
  */
 export const checkUsageLimits = (
   text: string,
-  canUseHumanization: (text: string) => { allowed: boolean; message: string }
+  canUseHumanization: (text: string) => { allowed: boolean; message?: string }
 ): { allowed: boolean; message?: string } => {
   const limitCheck = canUseHumanization(text);
   
-  if (!limitCheck.allowed) {
+  if (!limitCheck.allowed && limitCheck.message) {
     toast({
       title: "Giới hạn sử dụng",
       description: limitCheck.message,
@@ -28,7 +28,7 @@ export const checkUsageLimits = (
 export const trackUsage = async (
   user: any, 
   wordCount: number,
-  incrementUsage: (data: { humanizationWords: number }) => Promise<void>
+  incrementUsage: (data: { humanizationWords: number }) => Promise<any>
 ): Promise<void> => {
   if (user) {
     await incrementUsage({ humanizationWords: wordCount });
