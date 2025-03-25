@@ -15,6 +15,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import SubscriptionManagement from '@/pages/admin/SubscriptionManagement';
 import Settings from '@/pages/admin/Settings';
+import HumanizerTool from '@/components/HumanizerTool';
 import DetectorTool from '@/components/ai-detector/DetectorTool';
 import WriterTool from '@/components/ai-writer/WriterTool';
 import HumanizerFeature from '@/pages/features/HumanizerFeature';
@@ -83,10 +84,9 @@ function App() {
         <Route path="/humanizer" element={<ProtectedRoute><HumanizerFeature /></ProtectedRoute>} />
         <Route path="/ai-detector" element={<ProtectedRoute><DetectorTool /></ProtectedRoute>} />
         <Route path="/ai-writer" element={<ProtectedRoute><WriterTool /></ProtectedRoute>} />
-        <Route path="/translator" element={<ProtectedRoute><TextAnalysis /></ProtectedRoute>} />
+        <Route path="/text-analysis" element={<ProtectedRoute><TextAnalysis /></ProtectedRoute>} />
         
         {/* New pages */}
-        <Route path="/text-analysis" element={<ProtectedRoute><TextAnalysis /></ProtectedRoute>} />
         <Route path="/usage-statistics" element={<ProtectedRoute><UsageStatistics /></ProtectedRoute>} />
 
         {/* Admin routes */}
