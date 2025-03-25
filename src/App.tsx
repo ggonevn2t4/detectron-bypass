@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,10 +15,8 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import SubscriptionManagement from '@/pages/admin/SubscriptionManagement';
 import Settings from '@/pages/admin/Settings';
-import HumanizerTool from '@/pages/HumanizerTool';
 import DetectorTool from '@/components/ai-detector/DetectorTool';
 import WriterTool from '@/components/ai-writer/WriterTool';
-import TranslationTool from '@/pages/TranslationTool';
 import HumanizerFeature from '@/pages/features/HumanizerFeature';
 import AIDetectorFeature from '@/pages/features/AIDetectorFeature';
 import AIWriterFeature from '@/pages/features/AIWriterFeature';
@@ -26,9 +25,6 @@ import APIFeature from '@/pages/features/APIFeature';
 import TextAnalysis from '@/pages/TextAnalysis';
 import UsageStatistics from '@/pages/UsageStatistics';
 import Analytics from '@/pages/admin/Analytics';
-import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/Logo';
-import UserDropdown from '@/components/UserDropdown';
 
 // Define a type for the children prop
 type Props = {
@@ -64,14 +60,6 @@ function App() {
     setIsMounted(true);
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Sign out failed:", error);
-    }
-  };
-
   return (
     <Router>
       <Routes>
@@ -92,10 +80,10 @@ function App() {
         <Route path="/features/api" element={<APIFeature />} />
 
         {/* Tool Pages */}
-        <Route path="/humanizer" element={<ProtectedRoute><HumanizerTool /></ProtectedRoute>} />
+        <Route path="/humanizer" element={<ProtectedRoute><HumanizerFeature /></ProtectedRoute>} />
         <Route path="/ai-detector" element={<ProtectedRoute><DetectorTool /></ProtectedRoute>} />
         <Route path="/ai-writer" element={<ProtectedRoute><WriterTool /></ProtectedRoute>} />
-        <Route path="/translator" element={<ProtectedRoute><TranslationTool /></ProtectedRoute>} />
+        <Route path="/translator" element={<ProtectedRoute><TextAnalysis /></ProtectedRoute>} />
         
         {/* New pages */}
         <Route path="/text-analysis" element={<ProtectedRoute><TextAnalysis /></ProtectedRoute>} />
