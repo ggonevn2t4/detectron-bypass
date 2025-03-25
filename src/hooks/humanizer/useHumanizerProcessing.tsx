@@ -107,22 +107,22 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       // Run auto-optimization if needed
       if (autoOptimize && result.score < humanScoreTarget && iterations > 1) {
         await runOptimizationIterations(
-          result.humanized,
-          result.score,
-          iterations - 1,
-          humanScoreTarget,
-          usingRealAI,
-          {
+          result.humanized, // text
+          result.score, // currentScore
+          iterations - 1, // remainingIterations
+          humanScoreTarget, // targetScore 
+          usingRealAI, // usingRealAI
+          { // options
             ...options,
             iterationCount: optimizationStage + 1
           },
-          setOptimizationStage,
-          setOptimizationHistory,
-          setOutputText,
-          setHumanScore,
-          setProgressValue,
-          saveHistoryFn,
-          inputText
+          setOptimizationStage, // setOptimizationStage
+          setOptimizationHistory, // setOptimizationHistory
+          setOutputText, // setOutputText
+          setHumanScore, // setHumanScore
+          setProgressValue, // setProgressValue
+          saveHistoryFn, // saveToHistory
+          inputText // originalText
         );
       } else {
         toast({
