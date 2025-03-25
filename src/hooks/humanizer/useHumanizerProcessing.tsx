@@ -25,6 +25,7 @@ export interface ProcessingDependencies {
   setOptimizationStage: (stage: number) => void;
   setOptimizationHistory: (history: any) => void;
   setIsProcessing: (isProcessing: boolean) => void;
+  saveToHistory?: (originalText: string, humanizedText: string, score: number) => void;
   setError?: (error: string | null) => void;
 }
 
@@ -51,6 +52,7 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
     setOptimizationStage,
     setOptimizationHistory,
     setIsProcessing,
+    saveToHistory,
     setError
   } = deps;
 
@@ -110,6 +112,11 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         await incrementUsage({ humanizationWords: wordCount });
       }
       
+      // Save to history
+      if (saveToHistory && result.score) {
+        saveToHistory(inputText, result.humanized, result.score);
+      }
+      
       if (autoOptimize && result.score < humanScoreTarget && iterations > 1) {
         await runOptimizationIterations(
           result.humanized,
@@ -125,7 +132,9 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
           setOptimizationHistory,
           setOutputText,
           setHumanScore,
-          setProgressValue
+          setProgressValue,
+          saveToHistory,
+          inputText
         );
       } else {
         toast({
@@ -202,6 +211,11 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
       // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
       if (user) {
         await incrementUsage({ humanizationWords: wordCount });
+      }
+      
+      // Save optimized version to history
+      if (saveToHistory && result.score) {
+        saveToHistory(inputText, result.optimized, result.score);
       }
       
       toast({
