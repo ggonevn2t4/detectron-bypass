@@ -1,137 +1,212 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { MenuIcon, X, LogOut, User, Layout, LayoutDashboard, Shield } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAdmin } from '@/hooks/useAdmin';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Logo from '@/components/Logo';
-
-const navigationLinkClasses = "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=open]:bg-secondary data-[state=open]:text-muted-foreground hover:bg-secondary hover:text-muted-foreground px-2.5 h-7"
-
-interface UserDropdownProps {
-  user: any;
-  onSignOut: () => void;
-}
-
-const UserDropdown: React.FC<UserDropdownProps> = ({ user, onSignOut }) => {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatar} alt={user?.name} />
-            <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuItem>
-          <NavLink to="/profile" className="w-full h-full block">
-            Profile
-          </NavLink>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+} from '@/components/ui/dropdown-menu';
 
 const NavBar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error("Sign out failed:", error);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  const navLinks = [
+    { title: 'Home', path: '/' },
+    { title: 'About', path: '/about' },
+    { title: 'FAQ', path: '/faq' },
+    { title: 'Testimonials', path: '/testimonials' },
+    { title: 'Pricing', path: '/#pricing' },
+    { title: 'Features', path: '/#features' },
+  ];
+
+  const authenticatedLinks = user ? [
+    { title: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-4 w-4 mr-2" /> },
+    { title: 'Detailed Features', path: '/features', icon: <Layout className="h-4 w-4 mr-2" /> },
+    ...(isAdmin ? [{ title: 'Admin', path: '/admin', icon: <Shield className="h-4 w-4 mr-2" /> }] : []),
+  ] : [];
+
+  const isActive = (path: string) => {
+    if (path.includes('#')) {
+      return location.hash === path.split('#')[1] || (path === '/' && location.pathname === '/');
     }
+    return location.pathname === path;
+  };
+
+  const getUserInitials = () => {
+    if (!user) return '?';
+    const email = user.email || '';
+    return email.substring(0, 2).toUpperCase();
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <NavLink to="/" className="mr-4 hidden md:flex">
-          <Logo />
-          <span className="ml-2 text-xl font-bold">HumanizeAI</span>
-        </NavLink>
-        <NavLink to="/" className="mr-2 flex md:hidden">
-          <Logo />
-        </NavLink>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-1 md:space-x-2">
-            {!user && (
-              <>
-                <NavLink to="/features" className={navigationLinkClasses}>
-                  Features
-                </NavLink>
-                <NavLink to="/pricing" className={navigationLinkClasses}>
-                  Pricing
-                </NavLink>
-                <NavLink to="/about" className={navigationLinkClasses}>
-                  About
-                </NavLink>
-              </>
-            )}
-            {user && (
-              <>
-                <NavLink to="/dashboard" className={navigationLinkClasses}>
-                  Dashboard
-                </NavLink>
-                <NavLink to="/humanizer" className={navigationLinkClasses}>
-                  Humanizer
-                </NavLink>
-                <NavLink to="/ai-detector" className={navigationLinkClasses}>
-                  AI Detector
-                </NavLink>
-                <NavLink to="/ai-writer" className={navigationLinkClasses}>
-                  AI Writer
-                </NavLink>
-                <NavLink to="/translator" className={navigationLinkClasses}>
-                  Translator
-                </NavLink>
-                <NavLink to="/text-analysis" className={navigationLinkClasses}>
-                  Analysis
-                </NavLink>
-                <NavLink to="/usage-statistics" className={navigationLinkClasses}>
-                  Stats
-                </NavLink>
-              </>
-            )}
-          </nav>
-          <div className="flex items-center">
-            {user ? (
-              <UserDropdown user={user} onSignOut={handleSignOut} />
-            ) : (
-              <>
-                <NavLink to="/auth?mode=login" className="inline-flex">
-                  <Button variant="ghost" size="sm">
-                    Sign In
+    <header className={cn(
+      'fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 lg:px-12',
+      isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm' : 'bg-transparent'
+    )}>
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <Link to="/" className="flex items-center space-x-2">
+          <span className="relative w-8 h-8 bg-primary rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="absolute w-full h-full bg-primary animate-pulse-light"></div>
+            <span className="relative text-white font-bold text-lg">H</span>
+          </span>
+          <span className="font-medium text-xl">Humanize<span className="text-primary">AI</span></span>
+        </Link>
+
+        <nav className="hidden md:flex items-center space-x-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                isActive(link.path) ? 'text-primary' : 'text-foreground/80'
+              )}
+            >
+              {link.title}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden md:flex items-center space-x-4">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user.user_metadata.avatar_url} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <Link to="/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                </Link>
+                {authenticatedLinks.map((link) => (
+                  <Link key={link.path} to={link.path}>
+                    <DropdownMenuItem className="cursor-pointer">
+                      {link.icon}
+                      {link.title}
+                    </DropdownMenuItem>
+                  </Link>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="outline" className="text-sm font-medium">
+                  Log In
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button className="text-sm font-medium bg-primary hover:bg-primary/90">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
+
+        <button 
+          className="md:hidden p-2"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
+        </button>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in">
+          <div className="flex flex-col p-6 space-y-6">
+            <nav className="flex flex-col space-y-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    'text-lg font-medium transition-colors',
+                    isActive(link.path) ? 'text-primary' : 'text-foreground/80'
+                  )}
+                >
+                  {link.title}
+                </Link>
+              ))}
+              {user && authenticatedLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="text-lg font-medium transition-colors text-foreground/80 hover:text-primary flex items-center"
+                >
+                  {link.icon}
+                  <span>{link.title}</span>
+                </Link>
+              ))}
+            </nav>
+            <div className="flex flex-col space-y-4 pt-4 border-t">
+              {user ? (
+                <>
+                  <Link to="/profile">
+                    <Button variant="outline" className="w-full justify-start">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button onClick={() => signOut()} variant="outline" className="w-full justify-start">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
                   </Button>
-                </NavLink>
-                <NavLink to="/auth?mode=register" className="ml-2 inline-flex">
-                  <Button size="sm">Get Started</Button>
-                </NavLink>
-              </>
-            )}
+                </>
+              ) : (
+                <>
+                  <Link to="/auth">
+                    <Button variant="outline" className="w-full">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link to="/auth">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

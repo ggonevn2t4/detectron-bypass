@@ -1,13 +1,11 @@
 
 import { useToast } from "@/hooks/use-toast";
+import { 
+  humanizeText, optimizeText, runOptimizationIterations
+} from '@/services/ai';
 import { HumanizationOptions } from '@/services/ai/humanization/gemini-humanizer';
 import { useUserLimits } from '@/hooks/useUserLimits';
 import { useAuth } from '@/contexts/AuthContext';
-import { executeHumanization, executeOptimization } from './humanizationUtils';
-import { checkUsageLimits, trackUsage } from './usageTrackingUtils';
-import { saveToHistory } from './historyUtils';
-import { validateInput, handleProcessingError } from './errorUtils';
-import { runOptimizationIterations } from '@/services/ai';
 
 export interface ProcessingDependencies {
   inputText: string;
@@ -27,7 +25,6 @@ export interface ProcessingDependencies {
   setOptimizationStage: (stage: number) => void;
   setOptimizationHistory: (history: any) => void;
   setIsProcessing: (isProcessing: boolean) => void;
-  saveToHistory?: (originalText: string, humanizedText: string, score: number) => void;
   setError?: (error: string | null) => void;
 }
 
@@ -54,37 +51,49 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
     setOptimizationStage,
     setOptimizationHistory,
     setIsProcessing,
-    saveToHistory: saveHistoryFn,
     setError
   } = deps;
 
   const handleHumanize = async () => {
+    if (!inputText.trim()) {
+      toast({
+        title: "Empty Text",
+        description: "Please enter some text to humanize",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Kiểm tra giới hạn sử dụng
+    const wordCount = inputText.trim().split(/\s+/).length;
+    const limitCheck = canUseHumanization(inputText);
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Clear any previous errors
+    setError && setError(null);
+    setIsProcessing(true);
+    
     try {
-      // Validate input
-      validateInput(inputText);
-      
-      // Check usage limits
-      const limitCheck = checkUsageLimits(inputText, canUseHumanization);
-      if (!limitCheck.allowed) {
-        return;
+      // Validate input length
+      if (inputText.length > 100000) {
+        throw new Error("Text is too long. Please reduce the size of your input.");
       }
       
-      // Clear any previous errors
-      if (setError) setError(null);
-      setIsProcessing(true);
-      
-      // Calculate word count for usage tracking
-      const wordCount = inputText.trim().split(/\s+/).length;
-      
-      // Prepare humanization options
       const options: HumanizationOptions = {
         targetScore: humanScoreTarget,
         approach: humanizationApproach,
         style: writingStyle
       };
       
-      // Execute humanization
-      const result = await executeHumanization(
+      const result = await humanizeText(
         inputText,
         usingRealAI,
         options,
@@ -96,33 +105,27 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         setAiDetectionScore
       );
       
-      // Track usage
-      await trackUsage(user, wordCount, incrementUsage);
-      
-      // Save to history
-      if (saveHistoryFn && result.score) {
-        saveToHistory(inputText, result.humanized, result.score, saveHistoryFn);
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ humanizationWords: wordCount });
       }
       
-      // Run auto-optimization if needed
       if (autoOptimize && result.score < humanScoreTarget && iterations > 1) {
         await runOptimizationIterations(
-          result.humanized, // text
-          result.score, // currentScore
-          iterations - 1, // remainingIterations
-          humanScoreTarget, // targetScore 
-          usingRealAI, // usingRealAI
-          { // options
+          result.humanized,
+          result.score,
+          iterations - 1,
+          humanScoreTarget,
+          usingRealAI,
+          {
             ...options,
             iterationCount: optimizationStage + 1
           },
-          setOptimizationStage, // setOptimizationStage
-          setOptimizationHistory, // setOptimizationHistory
-          setOutputText, // setOutputText
-          setHumanScore, // setHumanScore
-          setProgressValue, // setProgressValue
-          saveHistoryFn, // saveToHistory
-          inputText // originalText
+          setOptimizationStage,
+          setOptimizationHistory,
+          setOutputText,
+          setHumanScore,
+          setProgressValue
         );
       } else {
         toast({
@@ -131,38 +134,52 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         });
       }
     } catch (error) {
-      handleProcessingError(error, setError);
+      console.error("Error in humanization process:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
+      // Set the error state if the setter is provided
+      setError && setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleOptimize = async () => {
+    if (!outputText.trim()) {
+      toast({
+        title: "No Text to Optimize",
+        description: "Please humanize text first before optimizing",
+        variant: "default",
+      });
+      return;
+    }
+    
+    // Kiểm tra giới hạn sử dụng
+    const limitCheck = canUseHumanization(outputText);
+    
+    if (!limitCheck.allowed) {
+      toast({
+        title: "Giới hạn sử dụng",
+        description: limitCheck.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Clear any previous errors
+    setError && setError(null);
+    setIsProcessing(true);
+    
     try {
-      // Validate output text
-      if (!outputText.trim()) {
-        toast({
-          title: "No Text to Optimize",
-          description: "Please humanize text first before optimizing",
-          variant: "default",
-        });
-        return;
-      }
-      
-      // Check usage limits
-      const limitCheck = checkUsageLimits(outputText, canUseHumanization);
-      if (!limitCheck.allowed) {
-        return;
-      }
-      
-      // Clear any previous errors
-      if (setError) setError(null);
-      setIsProcessing(true);
-      
-      // Calculate word count for usage tracking
+      const currentScore = humanScore || 0;
       const wordCount = outputText.trim().split(/\s+/).length;
       
-      // Prepare optimization options
       const options: HumanizationOptions = {
         targetScore: humanScoreTarget,
         approach: humanizationApproach,
@@ -170,10 +187,9 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         iterationCount: optimizationStage + 1
       };
       
-      // Execute optimization
-      const result = await executeOptimization(
+      const result = await optimizeText(
         outputText,
-        humanScore || 0,
+        currentScore,
         usingRealAI,
         options,
         setProgressValue,
@@ -183,12 +199,9 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         setHumanScore
       );
       
-      // Track usage
-      await trackUsage(user, wordCount, incrementUsage);
-      
-      // Save to history
-      if (saveHistoryFn && result.score) {
-        saveToHistory(inputText, result.humanized, result.score, saveHistoryFn);
+      // Cập nhật lượng sử dụng nếu người dùng đã đăng nhập
+      if (user) {
+        await incrementUsage({ humanizationWords: wordCount });
       }
       
       toast({
@@ -196,7 +209,17 @@ export const useHumanizerProcessing = (deps: ProcessingDependencies) => {
         description: `Your text is now ${result.score}% human-like`,
       });
     } catch (error) {
-      handleProcessingError(error, setError);
+      console.error("Error in optimization process:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
+      // Set the error state if the setter is provided
+      setError && setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }

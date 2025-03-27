@@ -5,7 +5,6 @@ import { useHumanizerTextHandlers } from './humanizer/useHumanizerTextHandlers';
 import { useHumanizerProcessing } from './humanizer/useHumanizerProcessing';
 import { useHumanizerEffects } from './humanizer/useHumanizerEffects';
 import { toast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
 
 export const useHumanizer = () => {
   // State management
@@ -36,32 +35,7 @@ export const useHumanizer = () => {
     handleDownload
   } = useHumanizerTextHandlers(setInputText, setWordCount);
 
-  // Save to history when humanization is complete
-  const saveToHistory = (originalText: string, humanizedText: string, score: number) => {
-    try {
-      const historyItem = {
-        id: uuidv4(),
-        originalText,
-        humanizedText,
-        humanScore: score,
-        timestamp: new Date().toISOString()
-      };
-
-      // Get existing history or initialize empty array
-      const existingHistory = localStorage.getItem('humanizer_history');
-      const history = existingHistory ? JSON.parse(existingHistory) : [];
-      
-      // Add new item at the beginning
-      const updatedHistory = [historyItem, ...history].slice(0, 50); // Keep only last 50 items
-      
-      // Save back to localStorage
-      localStorage.setItem('humanizer_history', JSON.stringify(updatedHistory));
-    } catch (error) {
-      console.error("Error saving to history:", error);
-    }
-  };
-
-  // Processing functions with history support
+  // Processing functions
   const {
     handleHumanize,
     handleOptimize
@@ -82,8 +56,7 @@ export const useHumanizer = () => {
     setProgressValue,
     setOptimizationStage,
     setOptimizationHistory,
-    setIsProcessing,
-    saveToHistory
+    setIsProcessing
   });
 
   // Side effects
@@ -142,7 +115,6 @@ export const useHumanizer = () => {
     handleOptimize,
     handleCopy,
     handleDownload,
-    saveToHistory,
     
     // Setters
     setUsingRealAI,
