@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom';
+import { Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -55,9 +56,21 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="font-medium mb-4">Legal</h4>
+            <h4 className="font-medium mb-4">Contact</h4>
             <ul className="space-y-3">
-              {['Terms of Service', 'Privacy Policy', 'Cookie Policy', 'Acceptable Use'].map((item) => (
+              <li className="flex items-start gap-2">
+                <Phone className="h-4 w-4 mt-0.5 text-primary" />
+                <span className="text-muted-foreground text-sm">Zalo/Phone: 0708684608</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 mt-0.5 text-primary" />
+                <span className="text-muted-foreground text-sm">Address: Landmark 81, Binh Thanh District, Ho Chi Minh City</span>
+              </li>
+            </ul>
+            
+            <h4 className="font-medium mb-4 mt-6">Legal</h4>
+            <ul className="space-y-3">
+              {['Terms of Service', 'Privacy Policy'].map((item) => (
                 <li key={item}>
                   <Link 
                     to="#" 
