@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -39,7 +38,11 @@ interface DetectorOutputProps {
   score: number | null;
   analysis: string;
   confidence: 'high' | 'medium' | 'low';
-  patterns?: string[];
+  patterns?: Array<{
+    pattern: string;
+    description: string;
+    examples: string[];
+  }>;
   suggestions?: string[];
   isProcessing: boolean;
   onCopy: () => void;
@@ -248,10 +251,21 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
                   </Tooltip>
                   <AccordionContent>
                     <ul className="space-y-2 p-3 bg-muted/5 border border-border/40 rounded-md">
-                      {patterns.map((pattern, index) => (
+                      {patterns && patterns.map((patternItem, index) => (
                         <li key={index} className="flex items-start text-sm">
                           <ArrowRight className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-primary/70" />
-                          <span>{pattern}</span>
+                          <div>
+                            <div className="font-medium">{patternItem.pattern}</div>
+                            <div className="text-muted-foreground">{patternItem.description}</div>
+                            {patternItem.examples && patternItem.examples.length > 0 && (
+                              <div className="mt-1 pl-2 border-l-2 border-muted">
+                                <span className="text-xs text-muted-foreground">Examples: </span>
+                                {patternItem.examples.map((example, i) => (
+                                  <div key={i} className="text-xs italic mt-1">{example}</div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -331,7 +345,6 @@ const DetectorOutput: React.FC<DetectorOutputProps> = ({
                 </DropdownMenu>
               </div>
               
-              {/* Add Social Sharing Component */}
               <div className="border-t border-border/40 mt-4 pt-4">
                 <SocialSharing 
                   title="AI Detector"

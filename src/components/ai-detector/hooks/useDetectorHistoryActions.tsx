@@ -23,7 +23,8 @@ export const useDetectorHistoryActions = ({
 }: UseDetectorHistoryActionsProps) => {
   const handleHistoryItemClick = (item: HistoryItem, isMobile: boolean) => {
     setInputText(item.text);
-    setDetectionResult(item.result as AIDetectionResult);
+    // The result is already AIDetectionResult compatible because we updated the interface
+    setDetectionResult(item.result);
     updateWordCount(item.text);
     setError && setError(null);
     

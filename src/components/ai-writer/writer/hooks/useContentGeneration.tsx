@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { generateAIContent, AIGenerationOptions, AIGenerationResult } from '@/services/ai';
 import { toast } from "@/hooks/use-toast";
@@ -34,6 +33,12 @@ export const useContentGeneration = ({
 }: ContentGenerationProps) => {
   const { user } = useAuth();
   const { canUseContentGeneration, incrementUsage } = useUserLimits();
+
+  const toneMap: { [key: string]: 'casual' | 'professional' | 'academic' } = {
+    casual: 'casual',
+    professional: 'professional',
+    formal: 'academic'
+  };
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -74,7 +79,7 @@ export const useContentGeneration = ({
     try {
       const options: AIGenerationOptions = {
         length,
-        tone,
+        tone: toneMap[tone],
         format,
         audience,
         includeHeadings,
@@ -82,7 +87,17 @@ export const useContentGeneration = ({
         includeQuotes
       };
       
-      const result = await generateAIContent(topic, options);
+      const result = await generateAIContent({
+        topic,
+        length,
+        tone: toneMap[tone],
+        format,
+        audience,
+        additionalInstructions: generateInstructions(),
+        includeHeadings,
+        includeFacts,
+        includeQuotes
+      });
       setGeneratedResult(result);
       setProgressValue(100);
       
@@ -139,7 +154,7 @@ export const useContentGeneration = ({
     try {
       const options: AIGenerationOptions = {
         length,
-        tone,
+        tone: toneMap[tone],
         format,
         audience,
         includeHeadings,
@@ -147,7 +162,17 @@ export const useContentGeneration = ({
         includeQuotes
       };
       
-      const result = await generateAIContent(topic, options);
+      const result = await generateAIContent({
+        topic,
+        length,
+        tone: toneMap[tone],
+        format,
+        audience,
+        additionalInstructions: generateInstructions(),
+        includeHeadings,
+        includeFacts,
+        includeQuotes
+      });
       setGeneratedResult(result);
       setProgressValue(100);
       

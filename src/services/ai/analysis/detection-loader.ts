@@ -13,7 +13,13 @@ export const getAIDetectionResults = async (text: string): Promise<AIDetectionRe
       score: 50,
       confidence: "low",
       analysis: "Text is too short for meaningful analysis.",
-      patterns: ["Text is too short for analysis."],
+      patterns: [
+        {
+          pattern: "Short text",
+          description: "Text is too short for analysis.",
+          examples: [text]
+        }
+      ],
       suggestions: ["Provide more text for a better analysis."]
     };
   }

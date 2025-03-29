@@ -1,88 +1,114 @@
-
-import { callOpenRouterAPI, OpenRouterModel } from "./openrouter/openrouter-service";
 import { AIGenerationOptions, AIGenerationResult } from "./generate";
+import { OPENROUTER_API_KEY, OPENROUTER_URL, OpenRouterResponse } from "./common";
 
-/**
- * Tạo nội dung sử dụng OpenRouter API
- */
 export const generateAIContentWithOpenRouter = async (
   options: AIGenerationOptions
 ): Promise<AIGenerationResult> => {
   try {
-    const {
-      topic = "",
-      length = 'medium',
-      tone = 'formal',
-      format = 'article',
-      audience = 'general',
-      includeHeadings = true,
-      includeFacts = true,
-      includeQuotes = false
-    } = options;
+    const formatMap: Record<string, string> = {
+      article: "informative article",
+      blog: "engaging blog post",
+      essay: "well-structured essay",
+      story: "narrative story",
+      summary: "concise summary"
+    };
+
+    const audienceMap: Record<string, string> = {
+      general: "general audience",
+      technical: "technical experts",
+      business: "business professionals",
+      academic: "academic readers"
+    };
+
+    const formatInstruction = options.format ? `Format: ${formatMap[options.format]}` : '';
+    const audienceInstruction = options.audience ? `Target audience: ${audienceMap[options.audience]}` : '';
+    const headingsInstruction = options.includeHeadings ? "Include clear headings and subheadings." : '';
+    const factsInstruction = options.includeFacts ? "Include relevant facts and statistics when possible." : '';
+    const quotesInstruction = options.includeQuotes ? "Include some expert quotes on the topic." : '';
+
+    const prompt = `
+      Generate well-written content about "${options.topic}".
+      ${formatInstruction}
+      ${audienceInstruction}
+      ${headingsInstruction}
+      ${factsInstruction}
+      ${quotesInstruction}
+      ${options.additionalInstructions ? `Additional instructions: ${options.additionalInstructions}` : ''}
+      
+      The content should be organized with clear structure, accurate information, and engaging writing style.
+      Focus on providing valuable information and insights about the topic.
+      
+      Return the content in the following JSON format:
+      {
+        "title": "An appropriate title for the content",
+        "content": "The generated content here"
+      }
+    `;
     
-    // Xác định độ dài dựa trên tùy chọn
-    const wordCountTarget = 
-      length === 'short' ? '300-500 words' :
-      length === 'medium' ? '700-1000 words' :
-      '1500-2000 words';
+    const response = await fetch(
+      `${OPENROUTER_URL}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "AI Humanizer"
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-medium",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status}`);
+    }
+
+    const data: OpenRouterResponse = await response.json();
     
-    // Chọn mô hình dựa trên độ phức tạp
-    const model = 
-      length === 'long' ? OpenRouterModel.CLAUDE_3_SONNET :
-      length === 'medium' ? OpenRouterModel.GPT4O :
-      OpenRouterModel.GPT4O_MINI;
-    
-    // Xây dựng prompt cho việc tạo nội dung
-    const prompt = `Generate a ${format} about "${topic}" in ${wordCountTarget}.
-    
-    Details:
-    - Tone: ${tone}
-    - Target audience: ${audience}
-    ${includeHeadings ? '- Include clear section headings' : '- Write in paragraph form without headings'}
-    ${includeFacts ? '- Include relevant facts and statistics' : '- Focus on general knowledge without specific statistics'}
-    ${includeQuotes ? '- Include some relevant quotes' : '- No need to include quotes'}
-    
-    First, generate a compelling title. Then write the content in a structured, engaging manner.`;
-    
-    // Hệ thống prompt cho việc tạo nội dung
-    const systemPrompt = `You are an expert content creator specializing in ${format}s for ${audience} audiences. 
-Your writing style is ${tone} and highly engaging. 
-Your content is well-structured, evidence-based, and compelling.
-Always start with a compelling title separated by two newlines from the content.
-${includeHeadings ? 'Use clear headings to organize the content.' : 'Write in flowing paragraphs without headings.'}`;
-    
-    // Gọi OpenRouter API
-    const generatedContent = await callOpenRouterAPI(prompt, systemPrompt, {
-      model,
-      temperature: 0.7,
-      max_tokens: length === 'long' ? 3000 : length === 'medium' ? 2000 : 1000
-    });
-    
-    // Trích xuất tiêu đề và nội dung
-    let title = "Generated Content";
-    let content = generatedContent;
-    
-    // Tách tiêu đề và nội dung
-    const titleMatch = generatedContent.match(/^(.*?)\n\n([\s\S]*)$/);
-    if (titleMatch) {
-      title = titleMatch[1].replace(/^#\s+/, ''); // Loại bỏ markdown # nếu có
-      content = titleMatch[2];
+    if (data.choices && data.choices.length > 0) {
+      const generatedContent = data.choices[0].message.content.trim();
+      let contentJson: any = {};
+      try {
+        contentJson = JSON.parse(generatedContent);
+      } catch (e) {
+        console.log("Response was not in JSON format, using raw text");
+      }
+      
+      const contentText = contentJson.content || generatedContent;
+      const wordCount = contentText.split(/\s+/).length;
+      const characterCount = contentText.length;
+      
+      const result: AIGenerationResult = {
+        content: contentText,
+        wordCount,
+        characterCount,
+        title: contentJson.title || "",
+        estimatedWordCount: wordCount,
+        qualityScore: 90
+      };
+      
+      return result;
     }
     
-    // Ước tính số từ
-    const wordCount = content.split(/\s+/).length;
-    
-    // Tính toán điểm chất lượng (giả lập)
-    const qualityScore = Math.floor(Math.random() * 10) + 85; // Số ngẫu nhiên từ 85-95
-    
-    return {
-      title,
-      content,
-      estimatedWordCount: wordCount,
-      qualityScore
-    };
+    throw new Error("Failed to generate content");
   } catch (error) {
     console.error("Error generating content with OpenRouter:", error);
-    throw error;
+    
+    // Return empty result on error
+    return {
+      content: "",
+      wordCount: 0,
+      characterCount: 0
+    };
   }
 };

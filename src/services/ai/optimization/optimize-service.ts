@@ -1,163 +1,87 @@
+import { HumanizationOptions, humanizeTextWithGemini, humanizeTextLocally } from "../humanization/gemini-humanizer";
+import { detectAIContent } from "../analysis/detailed-detector";
+import { humanizeTextWithOpenRouter } from "./openrouter-humanizer";
+import { OpenRouterModel } from "../openrouter/openrouter-service";
 
-import { toast } from "@/hooks/use-toast";
-import { 
-  humanizeTextWithGemini, analyzeAIScore, 
-  humanizeTextLocally, calculateInitialAiScore 
-} from '@/services/ai';
-import { HumanizationOptions } from '../humanization/gemini-humanizer';
-import { OptimizationHistoryItem } from '../humanization/humanize-service';
+export interface HumanizationResult {
+  humanized: string;
+  score: number;
+}
 
-export const optimizeText = async (
+export interface OptimizationHistoryItem {
+  iteration: number;
+  score: number;
+  text: string;
+  timestamp: Date;
+}
+
+const useGemini = true;
+const useOpenRouter = false;
+
+export const humanizeText = async (
   text: string,
-  currentScore: number,
   usingRealAI: boolean,
-  options: HumanizationOptions,
+  humanizationOptions: HumanizationOptions,
   setProgressValue: React.Dispatch<React.SetStateAction<number>>,
   setOptimizationStage: React.Dispatch<React.SetStateAction<number>>,
   setOptimizationHistory: React.Dispatch<React.SetStateAction<Array<OptimizationHistoryItem>>>,
   setOutputText: React.Dispatch<React.SetStateAction<string>>,
   setHumanScore: React.Dispatch<React.SetStateAction<number | null>>,
-) => {
-  setProgressValue(0);
+  setAiDetectionScore: React.Dispatch<React.SetStateAction<number | null>>
+): Promise<HumanizationResult> => {
+  const iterationCount = humanizationOptions.iterationCount || 0;
   
-  try {
-    const progressInterval = setInterval(() => {
-      setProgressValue(prev => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        return prev + Math.floor(Math.random() * 8) + 1;
-      });
-    }, 300);
-    
-    setOptimizationStage(prev => prev + 1);
-    
-    let optimized: string;
-    if (usingRealAI) {
-      // Convert currentScore to string for the system prompt, or pass it via options
-      optimized = await humanizeTextWithGemini(
-        text, 
-        undefined, 
-        {
-          ...options,
-          previousScore: currentScore,
-          iterationCount: options.iterationCount || 1
-        }
-      );
-    } else {
-      optimized = humanizeTextLocally(text);
-    }
-    
-    let newHumanScore: number;
-    if (usingRealAI) {
-      const newAiScore = await analyzeAIScore(optimized);
-      newHumanScore = 100 - newAiScore;
-    } else {
-      newHumanScore = 100 - calculateInitialAiScore(optimized);
-    }
-    
-    setOptimizationHistory(prev => [...prev, {
-      score: newHumanScore,
-      text: optimized
-    }]);
-    
-    setOutputText(optimized);
-    setHumanScore(newHumanScore);
-    setProgressValue(100);
-    
-    clearInterval(progressInterval);
-    
-    return {
-      optimized,
-      score: newHumanScore
-    };
-  } catch (error) {
-    console.error("Error in optimization process:", error);
-    throw error;
-  }
-};
+  // Local function to update progress
+  const updateProgress = (progress: number) => {
+    setProgressValue(progress);
+  };
+  
+  // Local function to update optimization stage
+  const updateOptimizationStage = (stage: number) => {
+    setOptimizationStage(stage);
+  };
+  
+  // Local function to update optimization history
+  const updateOptimizationHistory = (score: number, text: string) => {
+    setOptimizationHistory((prev: OptimizationHistoryItem[]) => [
+      ...prev,
+      {
+        iteration: iterationCount,
+        score: score,
+        text: text,
+        timestamp: new Date()
+      }
+    ]);
+  };
+  
+  // Choose the appropriate humanization function
+  const humanizationFunction = useOpenRouter 
+  ? (text: string) => humanizeTextWithOpenRouter(text) 
+  : useGemini
+    ? (text: string, options: any) => humanizeTextWithGemini(text, options) 
+    : (text: string) => humanizeTextLocally(text);
 
-export const runOptimizationIterations = async (
-  text: string, 
-  currentScore: number, 
-  remainingIterations: number,
-  targetScore: number,
-  usingRealAI: boolean,
-  options: HumanizationOptions,
-  setOptimizationStage: React.Dispatch<React.SetStateAction<number>>,
-  setOptimizationHistory: React.Dispatch<React.SetStateAction<Array<OptimizationHistoryItem>>>,
-  setOutputText: React.Dispatch<React.SetStateAction<string>>,
-  setHumanScore: React.Dispatch<React.SetStateAction<number | null>>,
-  setProgressValue: React.Dispatch<React.SetStateAction<number>>,
-) => {
-  if (remainingIterations <= 0 || currentScore >= targetScore) {
-    setProgressValue(100);
-    toast({
-      title: "Optimization Complete",
-      description: `Your text is now ${currentScore}% human-like`,
-    });
-    return;
-  }
+  // Humanize the text
+  const humanizedText = await humanizationFunction(text, humanizationOptions);
   
-  try {
-    setOptimizationStage(prev => prev + 1);
-    
-    let optimized: string;
-    if (usingRealAI) {
-      // Pass currentScore via options instead of as a string
-      optimized = await humanizeTextWithGemini(
-        text, 
-        undefined, 
-        {
-          ...options,
-          previousScore: currentScore,
-          iterationCount: options.iterationCount || 1
-        }
-      );
-    } else {
-      optimized = humanizeTextLocally(text);
-    }
-    
-    let newHumanScore: number;
-    if (usingRealAI) {
-      const newAiScore = await analyzeAIScore(optimized);
-      newHumanScore = 100 - newAiScore;
-    } else {
-      newHumanScore = 100 - calculateInitialAiScore(optimized);
-    }
-    
-    setOutputText(optimized);
-    setHumanScore(newHumanScore);
-    
-    setOptimizationHistory(prev => [...prev, {
-      score: newHumanScore,
-      text: optimized
-    }]);
-    
-    if (newHumanScore < targetScore && remainingIterations > 1) {
-      await runOptimizationIterations(
-        optimized, 
-        newHumanScore, 
-        remainingIterations - 1,
-        targetScore,
-        usingRealAI,
-        options,
-        setOptimizationStage,
-        setOptimizationHistory,
-        setOutputText,
-        setHumanScore,
-        setProgressValue
-      );
-    } else {
-      setProgressValue(100);
-      toast({
-        title: "Optimization Complete",
-        description: `Your text is now ${newHumanScore}% human-like`,
-      });
-    }
-  } catch (error) {
-    console.error("Error in optimization iteration:", error);
-    throw error;
-  }
+  // Analyze the AI score
+  const aiDetectionResult = await detectAIContent(humanizedText);
+  const aiScore = aiDetectionResult.score;
+  
+  // Update the output text
+  setOutputText(humanizedText);
+  
+  // Update the human score
+  setHumanScore(100 - aiScore);
+  
+  // Update the AI detection score
+  setAiDetectionScore(aiScore);
+  
+  // Update the optimization history
+  updateOptimizationHistory(100 - aiScore, humanizedText);
+  
+  return {
+    humanized: humanizedText,
+    score: 100 - aiScore
+  };
 };

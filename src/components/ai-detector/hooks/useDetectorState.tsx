@@ -1,14 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AIDetectionResult } from '@/services/ai/analysis/detailed-detector';
 
-export interface DetectionResult {
-  score: number;
-  confidence: 'low' | 'medium' | 'high';
-  analysis: string;
-  patterns: string[];
-  suggestions: string[];
-}
+export interface DetectionResult extends AIDetectionResult {}
 
 export interface HistoryItem {
   id: string;

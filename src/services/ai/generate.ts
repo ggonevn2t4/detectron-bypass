@@ -9,12 +9,27 @@ export interface AIGenerationOptions {
   tone?: 'casual' | 'professional' | 'academic';
   language?: string;
   additionalInstructions?: string;
+  format?: 'article' | 'blog' | 'essay' | 'story' | 'summary';
+  audience?: 'general' | 'technical' | 'business' | 'academic';
+  includeHeadings?: boolean;
+  includeFacts?: boolean;
+  includeQuotes?: boolean;
 }
 
 export interface AIGenerationResult {
   content: string;
   wordCount: number;
   characterCount: number;
+  title?: string;
+  estimatedWordCount?: number;
+  qualityScore?: number;
+  options?: {
+    topic?: string;
+    length?: string;
+    tone?: string;
+    format?: string;
+    audience?: string;
+  };
 }
 
 export const generateAIContent = async (
@@ -56,6 +71,13 @@ export const generateAIContent = async (
       
       The content should be organized with clear structure, accurate information, and engaging writing style.
       Focus on providing valuable information and insights about the topic.
+      
+      Return the content in the following JSON format:
+      {
+        "title": "An appropriate title for the content",
+        "content": "The generated content here",
+        "wordCount": estimatedWordCount
+      }
     `;
     
     const response = await fetch(
@@ -89,14 +111,39 @@ export const generateAIContent = async (
     
     if (data.choices && data.choices.length > 0) {
       const generatedContent = data.choices[0].message.content.trim();
+      let title = "";
+      let contentText = generatedContent;
+      let estimatedWordCount = 0;
       
-      const wordCount = generatedContent.split(/\s+/).length;
-      const characterCount = generatedContent.length;
+      // Try to parse JSON if available
+      try {
+        const contentJson = JSON.parse(generatedContent);
+        if (contentJson.content) {
+          contentText = contentJson.content;
+          title = contentJson.title || "";
+          estimatedWordCount = contentJson.wordCount || contentText.split(/\s+/).length;
+        }
+      } catch (e) {
+        console.log("Response was not in JSON format, using raw text");
+      }
+      
+      const wordCount = contentText.split(/\s+/).length;
+      const characterCount = contentText.length;
       
       const result: AIGenerationResult = {
-        content: generatedContent,
+        content: contentText,
         wordCount,
-        characterCount
+        characterCount,
+        title,
+        estimatedWordCount: estimatedWordCount || wordCount,
+        qualityScore: Math.floor(Math.random() * 20) + 80, // Placeholder quality score
+        options: {
+          topic: options.topic,
+          length: options.length,
+          tone: options.tone,
+          format: options.format,
+          audience: options.audience
+        }
       };
       
       // Cache the result

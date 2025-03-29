@@ -5,10 +5,20 @@ import { calculateInitialAiScore } from "./score-calculator";
 import requestCache from "../cache/request-cache";
 
 export interface TextAnalysisResult {
-  score: number;
-  readability: string;
-  tone: string;
-  complexity: string;
+  overall: number;
+  readability: {
+    score: number;
+    grade: string;
+    averageSentenceLength: number;
+  };
+  complexity: {
+    score: number;
+    vocabularyRichness: number;
+  };
+  consistency: {
+    score: number;
+  };
+  summary: string;
   suggestions: string[];
 }
 

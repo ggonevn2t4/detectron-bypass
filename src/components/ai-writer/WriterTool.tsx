@@ -33,19 +33,22 @@ const WriterTool = () => {
     handleContentEdit,
     handleTitleEdit,
     handleSendToHumanizer,
-    handleSendToDetector
+    handleSendToDetector,
+    setGeneratedResult
   } = state;
 
   const handleSelectHistoryContent = (item: any) => {
     setTopic(item.topic);
     setLength(item.length as 'short' | 'medium' | 'long');
-    setTone(item.tone as 'formal' | 'casual' | 'professional');
+    setTone(item.tone as 'casual' | 'professional' | 'academic');
     setFormat(item.format as 'article' | 'blog' | 'essay' | 'story' | 'summary');
     setAudience(item.audience as 'general' | 'technical' | 'business' | 'academic');
     
     // Set the generated result manually
-    state.setGeneratedResult({
+    setGeneratedResult({
       content: item.content,
+      wordCount: item.word_count || item.content.split(/\s+/).length,
+      characterCount: item.content.length,
       title: item.title,
       estimatedWordCount: item.word_count,
       qualityScore: item.quality_score
@@ -98,12 +101,12 @@ const WriterTool = () => {
                   
                   <WriterOutput
                     content={generatedResult?.content || ''}
-                    title={generatedResult?.title}
-                    estimatedWordCount={generatedResult?.estimatedWordCount}
+                    title={generatedResult?.title || ''}
+                    estimatedWordCount={generatedResult?.estimatedWordCount || 0}
                     isGenerating={isGenerating}
                     onCopy={handleCopy}
                     onDownload={handleDownload}
-                    contentScore={generatedResult?.qualityScore}
+                    contentScore={generatedResult?.qualityScore || 0}
                     onRegenerate={handleRegenerateContent}
                     onSave={handleSave}
                     onContentEdit={handleContentEdit}
