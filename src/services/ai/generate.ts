@@ -1,38 +1,124 @@
 
-import { API_KEY, BASE_URL, DeepSeekResponse } from "./common";
-import { isVietnameseText } from "./common";
-import { OpenRouterModel } from "./openrouter/openrouter-service";
+import { toast } from "@/hooks/use-toast";
+import { API_KEY, BASE_URL, DEEPSEEK_MODEL, DeepSeekResponse } from "./common";
+import requestCache from "./cache/request-cache";
 
 export interface AIGenerationOptions {
-  topic?: string;
+  topic: string;
   length?: 'short' | 'medium' | 'long';
-  tone?: 'formal' | 'casual' | 'professional';
-  format?: 'article' | 'blog' | 'essay' | 'story' | 'summary';
-  audience?: 'general' | 'technical' | 'business' | 'academic';
-  includeHeadings?: boolean;
-  includeFacts?: boolean;
-  includeQuotes?: boolean;
-  model?: OpenRouterModel | string;
+  tone?: 'casual' | 'professional' | 'academic';
+  language?: string;
+  additionalInstructions?: string;
 }
 
 export interface AIGenerationResult {
   content: string;
-  title?: string;
-  estimatedWordCount?: number;
-  qualityScore?: number;
-  options?: AIGenerationOptions;
+  wordCount: number;
+  characterCount: number;
 }
 
 export const generateAIContent = async (
-  topic: string,
   options: AIGenerationOptions
 ): Promise<AIGenerationResult> => {
-  // Return a default AIGenerationResult object for now
-  return {
-    content: "Generated content would appear here",
-    title: "Generated Title",
-    estimatedWordCount: 500,
-    qualityScore: 85,
-    options: {...options, topic}
-  };
+  try {
+    // Create a unique cache key based on the generation options
+    const cacheKey = `generate-${options.topic.substring(0, 50).replace(/\s+/g, '-')}-${options.length}-${options.tone}`;
+    
+    // Check if we have a cached result
+    const cachedResult = requestCache.get<AIGenerationResult>(cacheKey);
+    if (cachedResult !== null) {
+      console.log("Using cached AI generation result");
+      return cachedResult;
+    }
+    
+    // Prepare prompt based on options
+    const lengthMap = {
+      'short': '150-200 words',
+      'medium': '300-400 words',
+      'long': '600-800 words'
+    };
+    
+    const toneMap = {
+      'casual': 'conversational and friendly',
+      'professional': 'formal and business-like',
+      'academic': 'scholarly and research-oriented'
+    };
+    
+    const lengthInstruction = options.length ? lengthMap[options.length] : '300-400 words';
+    const toneInstruction = options.tone ? toneMap[options.tone] : 'professional and informative';
+    const languageInstruction = options.language ? `in ${options.language}` : '';
+    
+    const prompt = `
+      Generate well-written content about "${options.topic}" ${languageInstruction}.
+      Length: ${lengthInstruction}
+      Tone: ${toneInstruction}
+      ${options.additionalInstructions ? `Additional instructions: ${options.additionalInstructions}` : ''}
+      
+      The content should be organized with clear structure, accurate information, and engaging writing style.
+      Focus on providing valuable information and insights about the topic.
+    `;
+    
+    const response = await fetch(
+      `${BASE_URL}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: DEEPSEEK_MODEL,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "Error generating content");
+    }
+
+    const data: DeepSeekResponse = await response.json();
+    
+    if (data.choices && data.choices.length > 0) {
+      const generatedContent = data.choices[0].message.content.trim();
+      
+      const wordCount = generatedContent.split(/\s+/).length;
+      const characterCount = generatedContent.length;
+      
+      const result: AIGenerationResult = {
+        content: generatedContent,
+        wordCount,
+        characterCount
+      };
+      
+      // Cache the result
+      requestCache.set(cacheKey, result);
+      
+      return result;
+    }
+    
+    throw new Error("Failed to generate content");
+  } catch (error) {
+    console.error("Error generating content:", error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Unknown error occurred while generating content",
+      variant: "destructive",
+    });
+    
+    // Return empty result on error
+    return {
+      content: "",
+      wordCount: 0,
+      characterCount: 0
+    };
+  }
 };

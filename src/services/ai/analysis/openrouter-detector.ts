@@ -1,86 +1,137 @@
 
-import { callOpenRouterAPI, OpenRouterModel } from "../openrouter/openrouter-service";
-import { AIDetectionResult } from "./detailed-detector";
+import { API_KEY, BASE_URL, DEEPSEEK_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL, OpenRouterResponse } from "../common";
+import { OpenRouterModel, chooseAppropriateModel } from "../openrouter/openrouter-service";
+import { calculateInitialAiScore } from "./score-calculator";
+import requestCache from "../cache/request-cache";
 
-/**
- * Sử dụng OpenRouter API để phát hiện nội dung AI
- */
-export const detectAIContentWithOpenRouter = async (text: string): Promise<AIDetectionResult> => {
+export const detectAIContentWithOpenRouter = async (
+  text: string,
+  model: OpenRouterModel = OpenRouterModel.GPT4O
+): Promise<number> => {
   try {
-    // Chọn GPT-4o cho nhiệm vụ phát hiện AI (độ chính xác cao hơn)
-    const model = OpenRouterModel.GPT4O;
+    // Generate a cache key based on the text content and model
+    const cacheKey = `detect-openrouter-${model}-${text.substring(0, 100).replace(/\s+/g, '-')}`;
     
-    const prompt = `Analyze the following text to determine if it was written by AI or a human.
-    
-    Return your response in the following JSON format without any additional text:
-    {
-      "score": [numeric score from 0-100 where 100 means definitely AI-generated],
-      "confidence": ["high", "medium", or "low"],
-      "analysis": [2-3 sentence explanation of why you think the text is AI-generated or human-written],
-      "patterns": [array of 3-5 specific patterns found that indicate AI or human writing],
-      "suggestions": [array of 2-3 tips to make the text more human-like if it appears to be AI-generated]
+    // Check if we have a cached result
+    const cachedResult = requestCache.get<number>(cacheKey);
+    if (cachedResult !== null) {
+      console.log("Using cached OpenRouter detection result");
+      return cachedResult;
     }
     
-    Be extremely thorough in your analysis. Look for subtle patterns like:
-    - Consistent sentence structures
-    - Lack of personal anecdotes or genuine opinions
-    - Excessive formality or perfectly balanced arguments
-    - Unnaturally consistent tone throughout
-    - Absence of contractions, slang, or idioms
-    - Repetitive transition phrases
+    const selectedModel = chooseAppropriateModel(model);
     
-    Text to analyze: "${text}"`;
-    
-    const systemPrompt = `You are an expert at identifying AI-generated content. You can accurately distinguish between human-written and AI-generated text by analyzing patterns, language use, and structural elements. Provide your analysis in strict JSON format as requested.`;
-    
-    const analysisText = await callOpenRouterAPI(prompt, systemPrompt, {
-      model,
-      temperature: 0.2,
-      max_tokens: 1024
-    });
-    
-    try {
-      // Trích xuất JSON từ phản hồi
-      const jsonStartIndex = analysisText.indexOf('{');
-      const jsonEndIndex = analysisText.lastIndexOf('}') + 1;
-      
-      if (jsonStartIndex === -1 || jsonEndIndex === 0) {
-        throw new Error("Không thể phân tích định dạng JSON từ phản hồi");
+    const response = await fetch(
+      `${OPENROUTER_URL}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "AI Humanizer"
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            {
+              role: "user",
+              content: `Analyze the following text and provide only a number from 0-100 indicating how likely it was written by AI (100 = definitely AI, 0 = definitely human).
+              Be extremely critical of perfect grammar, formal language, and structured writing patterns which are typical AI traits.
+              Look for human qualities like minor typos, informal language, contractions, personal anecdotes, or opinions.
+              Return ONLY the number, no other text or explanation.
+              
+              Text to analyze: "${text}"`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 16
+        }),
       }
-      
-      const jsonString = analysisText.substring(jsonStartIndex, jsonEndIndex);
-      const result = JSON.parse(jsonString) as AIDetectionResult;
-      
-      // Xác thực và đảm bảo tất cả các trường tồn tại
-      return {
-        score: Math.min(Math.max(result.score || 50, 0), 100),
-        confidence: result.confidence || "medium",
-        analysis: result.analysis || "Không thể cung cấp phân tích chi tiết.",
-        patterns: result.patterns || ["Không phát hiện mẫu cụ thể."],
-        suggestions: result.suggestions || ["Không có gợi ý cụ thể."]
-      };
-    } catch (e) {
-      console.error("Error parsing AI detection response:", e);
-      
-      // Fallback nếu phân tích JSON thất bại
-      const scoreMatch = analysisText.match(/score"?\s*:?\s*(\d+)/i);
-      const confidenceMatch = analysisText.match(/confidence"?\s*:?\s*"(high|medium|low)"/i);
-      const analysisMatch = analysisText.match(/analysis"?\s*:?\s*"([^"]+)"/i);
-      
-      if (!scoreMatch) {
-        throw new Error("Không thể trích xuất điểm số từ phân tích");
-      }
-      
-      return {
-        score: scoreMatch ? Math.min(Math.max(parseInt(scoreMatch[1], 10), 0), 100) : 50,
-        confidence: (confidenceMatch ? confidenceMatch[1].toLowerCase() : "medium") as "high" | "medium" | "low",
-        analysis: analysisMatch ? analysisMatch[1] : "Không thể cung cấp phân tích chi tiết.",
-        patterns: ["Không phát hiện mẫu cụ thể."],
-        suggestions: ["Không có gợi ý cụ thể."]
-      };
+    );
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
+
+    const data: OpenRouterResponse = await response.json();
+    
+    // Get the generated score
+    if (data.choices && data.choices.length > 0) {
+      const generatedText = data.choices[0].message.content;
+      const scoreMatch = generatedText.match(/\d+/);
+      if (scoreMatch) {
+        const score = parseInt(scoreMatch[0], 10);
+        const finalScore = Math.min(Math.max(score, 0), 100); // Ensure between 0-100
+        
+        // Cache the result
+        requestCache.set(cacheKey, finalScore);
+        
+        return finalScore;
+      }
+    }
+
+    // If OpenRouter fails, fallback to DeepSeek API
+    return await fallbackToDeepSeek(text);
   } catch (error) {
     console.error("Error detecting AI content with OpenRouter:", error);
-    throw error;
+    
+    // Fallback to DeepSeek API
+    return await fallbackToDeepSeek(text);
+  }
+};
+
+// Fallback function that uses DeepSeek API if OpenRouter fails
+const fallbackToDeepSeek = async (text: string): Promise<number> => {
+  try {
+    console.log("Falling back to DeepSeek API for AI detection");
+    
+    const response = await fetch(
+      `${BASE_URL}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: DEEPSEEK_MODEL,
+          messages: [
+            {
+              role: "user",
+              content: `Analyze the following text and provide only a number from 0-100 indicating how likely it was written by AI (100 = definitely AI, 0 = definitely human).
+              Be extremely critical of perfect grammar, formal language, and structured writing patterns which are typical AI traits.
+              Look for human qualities like minor typos, informal language, contractions, personal anecdotes, or opinions.
+              Return ONLY the number, no other text or explanation.
+              
+              Text to analyze: "${text}"`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 16
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("DeepSeek API error");
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices.length > 0) {
+      const generatedText = data.choices[0].message.content;
+      const scoreMatch = generatedText.match(/\d+/);
+      if (scoreMatch) {
+        const score = parseInt(scoreMatch[0], 10);
+        return Math.min(Math.max(score, 0), 100); // Ensure between 0-100
+      }
+    }
+    
+    throw new Error("Invalid response from DeepSeek API");
+  } catch (error) {
+    console.error("Error with DeepSeek fallback:", error);
+    // If all else fails, use local calculation
+    return calculateInitialAiScore(text);
   }
 };
