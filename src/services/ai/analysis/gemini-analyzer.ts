@@ -1,6 +1,6 @@
 
 import { toast } from "@/components/ui/use-toast";
-import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
+import { API_KEY, BASE_URL, DEEPSEEK_MODEL, DeepSeekResponse } from "../common";
 import { calculateInitialAiScore } from "./score-calculator";
 import requestCache from "../cache/request-cache";
 
@@ -25,7 +25,7 @@ export const analyzeAIScore = async (text: string): Promise<number> => {
           "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: DEEPSEEK_MODEL,
           messages: [
             {
               role: "user",

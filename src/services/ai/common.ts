@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 // API key for DeepSeek
 export const API_KEY = "sk-cd308e06aeef4cb999efa5c3d59b0376";
 export const BASE_URL = "https://api.deepseek.com/v1";
+export const DEEPSEEK_MODEL = "DeepSeek-V3-0324";
 
 // API key for OpenRouter
 export const OPENROUTER_API_KEY = "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";

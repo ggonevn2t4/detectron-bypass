@@ -1,5 +1,5 @@
 
-import { API_KEY, BASE_URL, DeepSeekResponse } from "../common";
+import { API_KEY, BASE_URL, DEEPSEEK_MODEL, DeepSeekResponse } from "../common";
 import { toast } from "@/hooks/use-toast";
 
 export interface TranslationOptions {
@@ -50,7 +50,7 @@ export const translateText = async (
           "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: DEEPSEEK_MODEL,
           messages: [
             {
               role: "user",
